@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Geometry
 
-## Getting Started
+A friendly geometry playground for kids: study every 2D and 3D shape, learn its color, then beat the quiz at 3 levels.
 
-First, run the development server:
+- Local dev: http://localhost:3035
+- Production: https://geometry-bheng.vercel.app
+
+## Features
+
+- **Study mode** - browse 15 flat (2D) and 10 solid (3D) shapes. Tap any shape for its name, signature color, sides/corners or faces/edges, a fun fact, a real-world example, and a "Paint it!" row to see the shape in all 9 colors.
+- **Quiz mode** - 3 levels (Easy / Medium / Hard), pick 2D, 3D, or Both, and 5 / 10 / 15 questions. Question styles include "Tap the circle", "Tap the blue circle", "How many sides does a hexagon have?", and "Which shape has 8 faces?". Confetti on correct answers, up to 3 stars at the end.
+- **Light / dark mode** - follows the system, togglable, persisted.
+- Fully responsive, iPad and iPhone friendly, zero external assets.
+
+## Screenshots
+
+| Home | Study | Quiz |
+|------|-------|------|
+| ![Home](docs/home-light.png) | ![Study](docs/study-light.png) | ![Quiz](docs/quiz-light.png) |
+
+## Tech stack
+
+- Next.js 16 (App Router, server components by default)
+- React 19, TypeScript (strict)
+- Tailwind 4
+- node:test for the pure quiz/shape logic (`npm test`)
+- Nonce-based CSP via `proxy.ts`, security headers in `next.config.ts`
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3035
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Scripts
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Script | What it does |
+|--------|--------------|
+| `npm run dev` | Dev server on port 3035 |
+| `npm run build` | Production build |
+| `npm run typecheck` | TypeScript, no emit |
+| `npm run lint` | ESLint |
+| `npm test` | node:test suite for `lib/*` |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Project layout
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+app/          routes: / (home), /study, /quiz
+components/   ShapeSvg, StudyBrowser, QuizGame, ThemeToggle
+lib/          pure logic: shapes data, colors, seeded rng, quiz generator
+tests/        node:test suites for lib/
+```
