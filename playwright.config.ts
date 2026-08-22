@@ -2,7 +2,9 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "e2e",
-  timeout: 30_000,
+  // The full 10-question quiz spec spends ~2.3s per wrong answer on the
+  // auto-advance, so a full run legitimately takes ~30s.
+  timeout: 60_000,
   use: {
     baseURL: "http://localhost:3035",
     viewport: { width: 390, height: 844 },
