@@ -21,7 +21,7 @@ const DEFAULT_SETTINGS: QuizSettings = { level: "easy", scope: "2d", count: 5 };
 const LEVEL_META: { id: Level; label: string; hint: string; emoji: string }[] = [
   { id: "easy", label: "Easy", hint: "Find the shape", emoji: "🌱" },
   { id: "medium", label: "Medium", hint: "Shapes + colors + counting", emoji: "🌟" },
-  { id: "hard", label: "Hard", hint: "Tricky questions, 6 choices", emoji: "🔥" },
+  { id: "hard", label: "Hard", hint: "Tricky questions", emoji: "🔥" },
 ];
 
 const SCOPE_META: { id: Scope; label: string; hint: string }[] = [

@@ -51,7 +51,7 @@ test("generateQuiz is deterministic for the same seed", () => {
 });
 
 test("every level x scope x seed produces valid questions", () => {
-  const choicesFor: Record<Level, number> = { easy: 3, medium: 4, hard: 6 };
+  const choicesFor: Record<Level, number> = { easy: 4, medium: 4, hard: 4 };
   for (const level of LEVELS) {
     for (const scope of SCOPES) {
       for (const seed of [1, 99, 2026]) {

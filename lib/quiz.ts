@@ -44,10 +44,12 @@ interface LevelConfig {
   kinds: QuestionKind[];
 }
 
+// Every question shows 4 choices (owner request) - levels differ by question
+// kinds, not option count.
 const LEVELS: Record<Level, LevelConfig> = {
-  easy: { choices: 3, kinds: ["find-shape"] },
+  easy: { choices: 4, kinds: ["find-shape"] },
   medium: { choices: 4, kinds: ["find-shape", "find-color-shape", "count"] },
-  hard: { choices: 6, kinds: ["find-color-shape", "count", "which-property"] },
+  hard: { choices: 4, kinds: ["find-color-shape", "count", "which-property"] },
 };
 
 export const QUESTION_COUNTS = [5, 10, 15] as const;
