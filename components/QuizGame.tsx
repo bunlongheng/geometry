@@ -409,28 +409,6 @@ export default function QuizGame() {
           />
         </div>
 
-        {/* Per-question progress track - green = right, red = wrong (countries style) */}
-        <div className="flex gap-1" aria-label={`${correctCount} correct so far`}>
-          {questions.map((_, i) => {
-            const r = results[i];
-            const color =
-              r === "correct"
-                ? "var(--good)"
-                : r === "wrong"
-                  ? "var(--bad)"
-                  : i === current
-                    ? "var(--ink-soft)"
-                    : "var(--line)";
-            return (
-              <span
-                key={i}
-                className="h-1.5 flex-1 rounded-full"
-                style={{ background: color }}
-              />
-            );
-          })}
-        </div>
-
         <h2 key={current} className="animate-rise-in text-center font-display text-3xl font-bold">
           {question.prompt}
         </h2>
