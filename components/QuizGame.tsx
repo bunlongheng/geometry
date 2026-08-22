@@ -383,7 +383,7 @@ export default function QuizGame() {
     );
   } else if (phase === "play" && question) {
     content = (
-      <div className="flex min-h-[calc(100dvh-11rem)] flex-col gap-4">
+      <div className="quiz-fill flex min-h-[calc(100dvh-11rem)] flex-col gap-4">
         <div className="flex items-center justify-between gap-4">
           <span className="font-display text-lg font-bold text-ink-soft">
             {current + 1} / {questions.length}
@@ -399,7 +399,7 @@ export default function QuizGame() {
         </div>
 
         {/* Time bar - green draining to red when low */}
-        <div className="h-2.5 overflow-hidden rounded-full bg-bg-soft" aria-hidden>
+        <div className="quiz-timebar h-2.5 overflow-hidden rounded-full bg-bg-soft" aria-hidden>
           <div
             className="h-full rounded-full transition-[width] duration-100 ease-linear"
             style={{
@@ -409,13 +409,13 @@ export default function QuizGame() {
           />
         </div>
 
-        <h2 key={current} className="animate-rise-in text-center font-display text-4xl font-bold">
+        <h2 key={current} className="quiz-prompt animate-rise-in text-center font-display text-4xl font-bold">
           {question.display}
         </h2>
 
         <div
           key={`options-${current}`}
-          className="animate-rise-in grid flex-1 grid-cols-2 grid-rows-2 gap-3"
+          className="quiz-options animate-rise-in grid flex-1 grid-cols-2 grid-rows-2 gap-3"
         >
           {question.options.map((_, i) => (
             <OptionCard
@@ -431,7 +431,7 @@ export default function QuizGame() {
           ))}
         </div>
 
-        <div className="min-h-10 text-center" aria-live="polite">
+        <div className="quiz-feedback min-h-10 text-center" aria-live="polite">
           {picked !== null ? (
             <p
               className={`animate-pop-in font-display text-2xl font-bold ${
