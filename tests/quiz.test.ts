@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   generateQuiz,
+  gradeFor,
   starsFor,
   describeOption,
   type Level,
@@ -133,6 +134,33 @@ test("which-property distractors never share the asked count", () => {
       assert.equal(matching, 1, `ambiguous: ${q.prompt}`);
     }
   }
+});
+
+test("the same shape is never asked twice in a row", () => {
+  for (const scope of SCOPES) {
+    for (let seed = 1; seed <= 50; seed++) {
+      const qs = generateQuiz({ level: "easy", scope, count: 15 }, seed);
+      for (let i = 1; i < qs.length; i++) {
+        assert.notEqual(
+          qs[i].prompt,
+          qs[i - 1].prompt,
+          `repeat at seed ${seed} q${i}: ${qs[i].prompt}`,
+        );
+      }
+    }
+  }
+});
+
+test("gradeFor bands mirror the countries quiz", () => {
+  assert.deepEqual(gradeFor(5, 5), { score: 100, band: "perfect" });
+  assert.deepEqual(gradeFor(4, 5), { score: 80, band: "pass" });
+  assert.deepEqual(gradeFor(8, 10), { score: 80, band: "pass" });
+  assert.deepEqual(gradeFor(9, 10), { score: 90, band: "pass" });
+  assert.deepEqual(gradeFor(7, 10), { score: 70, band: "close" });
+  assert.deepEqual(gradeFor(5, 10), { score: 50, band: "close" });
+  assert.deepEqual(gradeFor(4, 10), { score: 40, band: "miss" });
+  assert.deepEqual(gradeFor(0, 10), { score: 0, band: "miss" });
+  assert.deepEqual(gradeFor(0, 0), { score: 0, band: "miss" });
 });
 
 test("starsFor boundaries", () => {

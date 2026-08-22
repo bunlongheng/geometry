@@ -1,13 +1,22 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
 import ShapeSvg from "@/components/ShapeSvg";
+import {
+  GearIcon,
+  RetryIcon,
+  SpeakerOffIcon,
+  SpeakerOnIcon,
+  TargetIcon,
+  TrophyIcon,
+} from "@/components/Icons";
+import { speak, stopSpeaking } from "@/components/speak";
+import { playCorrect, playHover, playLose, playTick, playWin, playWrong } from "@/components/sound";
 import { getColor } from "@/lib/colors";
 import {
   generateQuiz,
+  gradeFor,
   QUESTION_COUNTS,
-  starsFor,
   type Level,
   type Question,
   type QuizSettings,
@@ -15,13 +24,22 @@ import {
 } from "@/lib/quiz";
 
 const SETTINGS_KEY = "geometry-quiz-settings";
+const SOUND_KEY = "geometry-sound";
 
 const DEFAULT_SETTINGS: QuizSettings = { level: "easy", scope: "2d", count: 5 };
 
-const LEVEL_META: { id: Level; label: string; hint: string; emoji: string }[] = [
-  { id: "easy", label: "Easy", hint: "Find the shape", emoji: "🌱" },
-  { id: "medium", label: "Medium", hint: "Shapes + colors + counting", emoji: "🌟" },
-  { id: "hard", label: "Hard", hint: "Tricky questions", emoji: "🔥" },
+// Per-question countdown shrinks as the level goes up (countries quiz pattern).
+// Each level wears one of the app's own shapes - no emoji, ever (owner rule).
+const LEVEL_META: {
+  id: Level;
+  label: string;
+  hint: string;
+  shape: { id: string; color: "green" | "yellow" | "red" };
+  secs: number;
+}[] = [
+  { id: "easy", label: "Easy", hint: "Find the shape - 20s", shape: { id: "circle", color: "green" }, secs: 20 },
+  { id: "medium", label: "Medium", hint: "Shapes + colors - 15s", shape: { id: "star", color: "yellow" }, secs: 15 },
+  { id: "hard", label: "Hard", hint: "Tricky questions - 10s", shape: { id: "octagon", color: "red" }, secs: 10 },
 ];
 
 const SCOPE_META: { id: Scope; label: string; hint: string }[] = [
@@ -62,58 +80,59 @@ interface ConfettiPiece {
   delay: string;
 }
 
-function makeConfetti(): ConfettiPiece[] {
-  const hues = ["#ef4d4d", "#f7c526", "#3cb96e", "#3f7de0", "#f06ea9", "#8e5fd8"];
-  return Array.from({ length: 18 }, (_, i) => ({
-    left: `${8 + Math.random() * 84}%`,
-    top: `${20 + Math.random() * 30}%`,
+function makeConfetti(gold: boolean): ConfettiPiece[] {
+  const hues = gold
+    ? ["#ffc93c", "#f7c526", "#ffe08a", "#f7a826", "#fff3c4"]
+    : ["#ef4d4d", "#f7c526", "#3cb96e", "#3f7de0", "#f06ea9", "#8e5fd8"];
+  return Array.from({ length: 36 }, (_, i) => ({
+    left: `${4 + Math.random() * 92}%`,
+    top: `${2 + Math.random() * 30}%`,
     color: hues[i % hues.length],
-    cx: `${(Math.random() - 0.5) * 160}px`,
-    cy: `${60 + Math.random() * 120}px`,
+    cx: `${(Math.random() - 0.5) * 240}px`,
+    cy: `${100 + Math.random() * 200}px`,
     cr: `${(Math.random() - 0.5) * 720}deg`,
-    delay: `${Math.random() * 0.15}s`,
+    delay: `${Math.random() * 0.5}s`,
   }));
 }
+
+type Picked = number | "timeout" | null;
+type Outcome = "correct" | "wrong";
 
 function OptionCard({
   question,
   index,
   picked,
   onPick,
+  onHover,
 }: {
   question: Question;
   index: number;
-  picked: number | null;
+  picked: Picked;
   onPick: (i: number) => void;
+  onHover: () => void;
 }) {
   const option = question.options[index];
   const answered = picked !== null;
-  const isAnswer = index === question.answerIndex;
   const isPicked = picked === index;
-  const state = !answered
-    ? "idle"
-    : isAnswer
-      ? "correct"
-      : isPicked
-        ? "wrong"
-        : "dim";
-
+  const isRight = isPicked && index === question.answerIndex;
+  // Owner rule: only the tapped option gets colored - green if right, red if
+  // wrong. Everything else stays untouched.
   return (
     <button
       type="button"
       disabled={answered}
       onClick={() => onPick(index)}
-      className={`sticker flex min-h-24 flex-col items-center justify-center gap-1 p-4 transition-all ${
-        state === "idle" ? "sticker-press" : ""
-      } ${state === "correct" && answered ? "animate-bounce-big" : ""} ${
-        state === "wrong" ? "animate-shake" : ""
-      } ${state === "dim" ? "opacity-40" : ""}`}
+      onMouseEnter={onHover}
+      onFocus={onHover}
+      className={`sticker flex min-h-24 flex-col items-center justify-center gap-1 p-4 ${
+        !answered ? "sticker-press" : ""
+      }`}
       style={
-        state === "correct" && answered
-          ? { borderColor: "var(--good)", boxShadow: "0 5px 0 var(--good)" }
-          : state === "wrong"
-            ? { borderColor: "var(--bad)", boxShadow: "0 5px 0 var(--bad)" }
-            : undefined
+        isPicked
+          ? isRight
+            ? { borderColor: "var(--good)", borderWidth: 3 }
+            : { borderColor: "var(--bad)", borderWidth: 3 }
+          : undefined
       }
       aria-label={
         option.kind === "text"
@@ -133,17 +152,33 @@ function OptionCard({
 export default function QuizGame() {
   const [phase, setPhase] = useState<"setup" | "play" | "done">("setup");
   const [settings, setSettings] = useState<QuizSettings>(DEFAULT_SETTINGS);
+  const [soundOn, setSoundOn] = useState(true);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [current, setCurrent] = useState(0);
-  const [picked, setPicked] = useState<number | null>(null);
-  const [correctCount, setCorrectCount] = useState(0);
+  const [picked, setPicked] = useState<Picked>(null);
+  const [results, setResults] = useState<Outcome[]>([]);
+  const [remaining, setRemaining] = useState(0);
   const [confetti, setConfetti] = useState<ConfettiPiece[]>([]);
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const deadlineRef = useRef(0);
+  const tickAtRef = useRef(0);
+  // Which question index has been read aloud - each question is spoken EXACTLY
+  // once (owner rule), never re-read on rerenders or dev double-effects.
+  const spokenRef = useRef(-1);
+
+  const secsPerQ = LEVEL_META.find((l) => l.id === settings.level)?.secs ?? 20;
+  const correctCount = results.filter((r) => r === "correct").length;
 
   useEffect(() => {
     setSettings(loadSettings());
+    try {
+      setSoundOn(localStorage.getItem(SOUND_KEY) !== "off");
+    } catch {
+      /* default on */
+    }
     return () => {
       if (advanceTimer.current) clearTimeout(advanceTimer.current);
+      stopSpeaking();
     };
   }, []);
 
@@ -159,47 +194,159 @@ export default function QuizGame() {
     });
   };
 
+  const toggleSound = () => {
+    setSoundOn((on) => {
+      const next = !on;
+      try {
+        localStorage.setItem(SOUND_KEY, next ? "on" : "off");
+      } catch {
+        /* fine */
+      }
+      if (!next) stopSpeaking();
+      return next;
+    });
+  };
+
   const start = () => {
-    setQuestions(generateQuiz(settings, Date.now() >>> 0));
+    const qs = generateQuiz(settings, Date.now() >>> 0);
+    setQuestions(qs);
     setCurrent(0);
     setPicked(null);
-    setCorrectCount(0);
+    setResults([]);
     setConfetti([]);
     setPhase("play");
+    // Called from the Start tap (a user gesture) - this unlocks speech on iOS
+    // and reads the 1st question right away.
+    spokenRef.current = 0;
+    if (soundOn && qs[0]) speak(qs[0].prompt);
   };
 
   const question = questions[current];
 
-  const pickOption = (index: number) => {
-    if (picked !== null || !question) return;
-    setPicked(index);
-    const correct = index === question.answerIndex;
-    if (correct) {
-      setCorrectCount((n) => n + 1);
-      setConfetti(makeConfetti());
-    }
-    advanceTimer.current = setTimeout(
-      () => {
-        setConfetti([]);
-        setPicked(null);
-        if (current + 1 >= questions.length) {
-          setPhase("done");
-        } else {
-          setCurrent((i) => i + 1);
-        }
-      },
-      correct ? 1100 : 1900,
-    );
-  };
-
-  const stars = useMemo(
-    () => starsFor(correctCount, questions.length),
-    [correctCount, questions.length],
+  const pickOption = useCallback(
+    (index: number | "timeout") => {
+      if (picked !== null || !question) return;
+      setPicked(index);
+      const correct = index !== "timeout" && index === question.answerIndex;
+      setResults((r) => [...r, correct ? "correct" : "wrong"]);
+      stopSpeaking();
+      if (soundOn) {
+        if (correct) playCorrect();
+        else playWrong();
+      }
+      advanceTimer.current = setTimeout(
+        () => {
+          setPicked(null);
+          if (current + 1 >= questions.length) {
+            setPhase("done");
+          } else {
+            setCurrent((i) => i + 1);
+          }
+        },
+        correct ? 1300 : 2300,
+      );
+    },
+    [picked, question, soundOn, current, questions.length],
   );
 
+  // Countdown for the active, unanswered question (deadline-based, 100ms tick).
+  useEffect(() => {
+    if (phase !== "play" || picked !== null) return;
+    deadlineRef.current = performance.now() + secsPerQ * 1000;
+    tickAtRef.current = secsPerQ;
+    setRemaining(secsPerQ * 1000);
+    const id = setInterval(() => {
+      const left = Math.max(0, deadlineRef.current - performance.now());
+      setRemaining(left);
+      const secs = Math.ceil(left / 1000);
+      if (secs <= 5 && secs > 0 && secs < tickAtRef.current) {
+        tickAtRef.current = secs;
+        if (soundOn) playTick();
+      }
+      if (left <= 0) {
+        clearInterval(id);
+        pickOption("timeout");
+      }
+    }, 100);
+    return () => clearInterval(id);
+  }, [phase, current, picked, secsPerQ, pickOption, soundOn]);
+
+  // Read each new question aloud ONCE (the 1st is spoken from the Start tap).
+  useEffect(() => {
+    if (phase !== "play" || !question || picked !== null) return;
+    if (spokenRef.current === current) return;
+    spokenRef.current = current;
+    if (soundOn) speak(question.prompt);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- speak once per question
+  }, [current, phase]);
+
+  // End-of-quiz celebration: confetti ONLY here, and only for a passing grade.
+  useEffect(() => {
+    if (phase !== "done") return;
+    const grade = gradeFor(correctCount, questions.length);
+    if (grade.band === "perfect" || grade.band === "pass") {
+      setConfetti(makeConfetti(grade.band === "perfect"));
+      if (soundOn) playWin();
+    } else if (soundOn) {
+      playLose();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once on entering done
+  }, [phase]);
+
+  const secondsLeft = Math.ceil(remaining / 1000);
+  const timeLow = picked === null && secondsLeft <= 5;
+
+  const soundButton = (
+    <button
+      type="button"
+      onClick={toggleSound}
+      aria-label={soundOn ? "Turn sound off" : "Turn sound on"}
+      className="sticker sticker-press flex h-10 w-10 items-center justify-center text-lg"
+      style={{ borderRadius: "9999px" }}
+    >
+      {soundOn ? (
+        <SpeakerOnIcon className="h-5 w-5" />
+      ) : (
+        <SpeakerOffIcon className="h-5 w-5" />
+      )}
+    </button>
+  );
+
+  const goToSettings = () => {
+    if (advanceTimer.current) clearTimeout(advanceTimer.current);
+    stopSpeaking();
+    setPicked(null);
+    setConfetti([]);
+    setPhase("setup");
+  };
+
+  // Owner rule: settings live top-right, always.
+  const topRightControls = (
+    <div className="flex items-center gap-2">
+      {soundButton}
+      <button
+        type="button"
+        onClick={goToSettings}
+        aria-label="Quiz settings"
+        className="sticker sticker-press flex h-10 w-10 items-center justify-center text-lg"
+        style={{ borderRadius: "9999px" }}
+      >
+        <GearIcon className="h-5 w-5" />
+      </button>
+    </div>
+  );
+
+  let content: React.ReactNode = null;
+
   if (phase === "setup") {
-    return (
-      <div className="mx-auto flex w-full max-w-lg flex-col gap-6">
+    content = (
+      <>
+        <div className="pr-24 text-center sm:pr-0">
+          <h1 className="font-display text-4xl font-bold">Quiz time!</h1>
+          <p className="mt-1 font-semibold text-ink-soft">
+            Pick your level and shapes, beat the timer, score up to 100!
+          </p>
+        </div>
         <section className="flex flex-col gap-3">
           <h2 className="font-display text-xl font-bold">How tricky?</h2>
           <div className="grid grid-cols-3 gap-3">
@@ -214,8 +361,8 @@ export default function QuizGame() {
                 }`}
                 style={settings.level === l.id ? { borderColor: "transparent" } : undefined}
               >
-                <span className="text-2xl" aria-hidden>
-                  {l.emoji}
+                <span aria-hidden>
+                  <ShapeSvg shapeId={l.shape.id} colorId={l.shape.color} className="h-8 w-8" />
                 </span>
                 <span className="font-display text-lg font-bold">{l.label}</span>
                 <span
@@ -285,53 +432,56 @@ export default function QuizGame() {
         >
           Start!
         </button>
-      </div>
+      </>
     );
-  }
-
-  if (phase === "play" && question) {
-    const answeredCorrect = picked !== null && picked === question.answerIndex;
-    return (
-      <div className="relative mx-auto flex w-full max-w-lg flex-col gap-5">
-        {confetti.length > 0 ? (
-          <div className="pointer-events-none absolute inset-0 z-10" aria-hidden>
-            {confetti.map((p, i) => (
-              <span
-                key={i}
-                className="absolute h-3 w-3 rounded-sm"
-                style={
-                  {
-                    left: p.left,
-                    top: p.top,
-                    backgroundColor: p.color,
-                    "--cx": p.cx,
-                    "--cy": p.cy,
-                    "--cr": p.cr,
-                    animation: `confetti-fall 0.9s ease-out ${p.delay} both`,
-                  } as React.CSSProperties
-                }
-              />
-            ))}
-          </div>
-        ) : null}
-
-        <div className="flex items-center justify-between gap-3">
+  } else if (phase === "play" && question) {
+    content = (
+      <>
+        <div className="flex items-center gap-4 pr-24">
           <span className="font-display text-lg font-bold text-ink-soft">
             {current + 1} / {questions.length}
           </span>
-          <div
-            className="h-3 flex-1 overflow-hidden rounded-full bg-bg-soft"
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={questions.length}
-            aria-valuenow={current + 1}
+          <span
+            className={`font-display text-xl font-bold tabular-nums ${
+              timeLow ? "text-bad" : "text-ink"
+            }`}
+            aria-label={`${secondsLeft} seconds left`}
           >
-            <div
-              className="h-full rounded-full bg-accent transition-all duration-500"
-              style={{ width: `${((current + 1) / questions.length) * 100}%` }}
-            />
-          </div>
-          <span className="font-display text-lg font-bold text-good">{correctCount} ✓</span>
+            {secondsLeft}s
+          </span>
+        </div>
+
+        {/* Time bar - green draining to red when low */}
+        <div className="h-2.5 overflow-hidden rounded-full bg-bg-soft" aria-hidden>
+          <div
+            className="h-full rounded-full transition-[width] duration-100 ease-linear"
+            style={{
+              width: `${(remaining / (secsPerQ * 1000)) * 100}%`,
+              background: timeLow ? "var(--bad)" : "var(--good)",
+            }}
+          />
+        </div>
+
+        {/* Per-question progress track - green = right, red = wrong (countries style) */}
+        <div className="flex gap-1" aria-label={`${correctCount} correct so far`}>
+          {questions.map((_, i) => {
+            const r = results[i];
+            const color =
+              r === "correct"
+                ? "var(--good)"
+                : r === "wrong"
+                  ? "var(--bad)"
+                  : i === current
+                    ? "var(--ink-soft)"
+                    : "var(--line)";
+            return (
+              <span
+                key={i}
+                className="h-1.5 flex-1 rounded-full"
+                style={{ background: color }}
+              />
+            );
+          })}
         </div>
 
         <h2 key={current} className="animate-rise-in text-center font-display text-3xl font-bold">
@@ -340,9 +490,7 @@ export default function QuizGame() {
 
         <div
           key={`options-${current}`}
-          className={`animate-rise-in grid gap-3 ${
-            question.options.length > 4 ? "grid-cols-3" : "grid-cols-2"
-          }`}
+          className="animate-rise-in grid grid-cols-2 gap-3"
         >
           {question.options.map((_, i) => (
             <OptionCard
@@ -351,6 +499,9 @@ export default function QuizGame() {
               index={i}
               picked={picked}
               onPick={pickOption}
+              onHover={() => {
+                if (soundOn && picked === null) playHover();
+              }}
             />
           ))}
         </div>
@@ -360,56 +511,99 @@ export default function QuizGame() {
             <p className="animate-pop-in font-semibold">
               <span
                 className={`font-display text-xl font-bold ${
-                  answeredCorrect ? "text-good" : "text-bad"
+                  picked !== "timeout" && picked === question.answerIndex
+                    ? "text-good"
+                    : "text-bad"
                 }`}
               >
-                {answeredCorrect ? "Yes! " : "Almost! "}
+                {picked === "timeout"
+                  ? "Time's up! "
+                  : picked === question.answerIndex
+                    ? "Yes! "
+                    : "Almost! "}
               </span>
               {question.explain}
             </p>
           ) : null}
         </div>
-      </div>
+      </>
     );
   }
 
-  // done
-  return (
-    <div className="mx-auto flex w-full max-w-lg flex-col items-center gap-6 text-center">
-      <div className="flex gap-2 pt-4" aria-label={`${stars} out of 3 stars`}>
-        {[0, 1, 2].map((i) => (
-          <svg
-            key={i}
-            viewBox="0 0 24 24"
-            className={`h-16 w-16 ${i < stars ? "animate-star-pop" : ""}`}
-            style={{ animationDelay: `${0.2 + i * 0.25}s` }}
-            aria-hidden
-          >
-            <path
-              d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.7L12 16.8 5.9 20.3l1.5-6.7L2.2 9l6.9-.7Z"
-              fill={i < stars ? "#ffc93c" : "var(--line)"}
-              stroke={i < stars ? "#d9a410" : "var(--ink-soft)"}
-              strokeWidth="1"
-              strokeLinejoin="round"
+  // done - countries-style grade screen, confetti only on a passing grade
+  const grade = gradeFor(correctCount, questions.length);
+  const ringColor =
+    grade.band === "perfect"
+      ? "var(--sunny)"
+      : grade.band === "pass"
+        ? "var(--good)"
+        : grade.band === "close"
+          ? "#f78c2a"
+          : "var(--bad)";
+  const title =
+    grade.band === "perfect"
+      ? "Perfect!"
+      : grade.band === "pass"
+        ? "Winner!"
+        : grade.band === "close"
+          ? "So close!"
+          : "Nice try!";
+  const resultIcon =
+    grade.band === "perfect" || grade.band === "pass" ? (
+      <TrophyIcon className="h-14 w-14 text-sunny" />
+    ) : grade.band === "close" ? (
+      <TargetIcon className="h-14 w-14 text-[#f78c2a]" />
+    ) : (
+      <RetryIcon className="h-14 w-14 text-ink-soft" />
+    );
+
+  if (phase === "done") {
+    content = (
+      <div className="relative flex flex-col items-center gap-5 text-center">
+        {confetti.length > 0 ? (
+        <div className="pointer-events-none absolute inset-0 z-10" aria-hidden>
+          {confetti.map((p, i) => (
+            <span
+              key={i}
+              className="absolute h-3 w-3 rounded-sm"
+              style={
+                {
+                  left: p.left,
+                  top: p.top,
+                  backgroundColor: p.color,
+                  "--cx": p.cx,
+                  "--cy": p.cy,
+                  "--cr": p.cr,
+                  animation: `confetti-fall 1.3s ease-out ${p.delay} both`,
+                } as React.CSSProperties
+              }
             />
-          </svg>
-        ))}
+          ))}
+        </div>
+      ) : null}
+
+      <span className="pt-2" aria-hidden>
+        {resultIcon}
+      </span>
+      <h2 className="animate-pop-in font-display text-4xl font-bold">{title}</h2>
+
+      <div
+        className="animate-pop-in grid h-36 w-36 place-items-center rounded-full border-8 bg-card"
+        style={{ borderColor: ringColor }}
+        aria-label={`Score ${grade.score} out of 100`}
+      >
+        <div>
+          <div className="font-display text-5xl font-bold tabular-nums">{grade.score}</div>
+          <div className="text-xs font-bold uppercase tracking-widest text-ink-soft">/ 100</div>
+        </div>
       </div>
-      <div>
-        <h2 className="font-display text-4xl font-bold">
-          {stars === 3
-            ? "Amazing!"
-            : stars === 2
-              ? "Great job!"
-              : stars === 1
-                ? "Good try!"
-                : "Keep practicing!"}
-        </h2>
-        <p className="mt-2 text-lg font-semibold text-ink-soft">
-          You got <span className="text-ink">{correctCount}</span> out of{" "}
-          <span className="text-ink">{questions.length}</span> right.
-        </p>
-      </div>
+
+      <p className="text-lg font-semibold text-ink-soft">
+        <span className="text-ink">{correctCount}</span> out of{" "}
+        <span className="text-ink">{questions.length}</span> correct
+        {grade.band === "close" ? " - get 80 to win!" : ""}
+      </p>
+
       <div className="flex w-full flex-col gap-3">
         <button
           type="button"
@@ -419,20 +613,17 @@ export default function QuizGame() {
         >
           Play again
         </button>
-        <button
-          type="button"
-          onClick={() => setPhase("setup")}
-          className="sticker sticker-press py-3.5 font-display text-xl font-bold"
-        >
-          Change settings
-        </button>
-        <Link
-          href="/study"
-          className="sticker sticker-press py-3.5 font-display text-xl font-bold"
-        >
-          Study the shapes
-        </Link>
       </div>
+    </div>
+    );
+  }
+
+  // Single wrapper for every phase: ALL controls pinned top top right,
+  // responsive (owner rule).
+  return (
+    <div className="relative mx-auto flex w-full max-w-lg flex-col gap-5">
+      <div className="absolute right-0 top-0 z-30">{topRightControls}</div>
+      {content}
     </div>
   );
 }

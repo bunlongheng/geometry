@@ -38,6 +38,9 @@ export default function ShapeSvg({ shapeId, colorId, className, title }: ShapeSv
   const lite = shade(fill, 0.28);
   const dark = shade(fill, -0.18);
   const stroke = { stroke: line, strokeWidth: 4, strokeLinejoin: "round" as const };
+  // Straight-edged shapes keep TRUE sharp corners (owner rule: a rounded
+  // rectangle confuses corner-learning) - miter join, no corner radius.
+  const sharp = { stroke: line, strokeWidth: 4, strokeLinejoin: "miter" as const };
 
   let body: React.ReactNode;
   switch (shapeId) {
@@ -46,21 +49,19 @@ export default function ShapeSvg({ shapeId, colorId, className, title }: ShapeSv
       body = <circle cx="50" cy="50" r="38" fill={fill} {...stroke} />;
       break;
     case "square":
-      body = <rect x="16" y="16" width="68" height="68" rx="8" fill={fill} {...stroke} />;
+      body = <rect x="16" y="16" width="68" height="68" fill={fill} {...sharp} />;
       break;
     case "rectangle":
-      body = <rect x="8" y="27" width="84" height="46" rx="8" fill={fill} {...stroke} />;
+      body = <rect x="8" y="27" width="84" height="46" fill={fill} {...sharp} />;
       break;
     case "triangle":
-      body = (
-        <path d="M50 13 L89 82 Q90 86 85 86 L15 86 Q10 86 11 82 Z" fill={fill} {...stroke} />
-      );
+      body = <polygon points="50,13 89,85 11,85" fill={fill} {...sharp} />;
       break;
     case "oval":
       body = <ellipse cx="50" cy="50" rx="42" ry="29" fill={fill} {...stroke} />;
       break;
     case "star":
-      body = <polygon points={starPoints(50, 53, 42, 18)} fill={fill} {...stroke} />;
+      body = <polygon points={starPoints(50, 53, 42, 18)} fill={fill} {...sharp} />;
       break;
     case "heart":
       body = (
@@ -72,22 +73,22 @@ export default function ShapeSvg({ shapeId, colorId, className, title }: ShapeSv
       );
       break;
     case "diamond":
-      body = <polygon points="50,8 88,50 50,92 12,50" fill={fill} {...stroke} />;
+      body = <polygon points="50,8 88,50 50,92 12,50" fill={fill} {...sharp} />;
       break;
     case "pentagon":
-      body = <polygon points={regularPolygon(5, 50, 53, 41)} fill={fill} {...stroke} />;
+      body = <polygon points={regularPolygon(5, 50, 53, 41)} fill={fill} {...sharp} />;
       break;
     case "hexagon":
-      body = <polygon points={regularPolygon(6, 50, 50, 41)} fill={fill} {...stroke} />;
+      body = <polygon points={regularPolygon(6, 50, 50, 41)} fill={fill} {...sharp} />;
       break;
     case "octagon":
-      body = <polygon points={regularPolygon(8, 50, 50, 41, -67.5)} fill={fill} {...stroke} />;
+      body = <polygon points={regularPolygon(8, 50, 50, 41, -67.5)} fill={fill} {...sharp} />;
       break;
     case "trapezoid":
-      body = <polygon points="28,27 72,27 92,73 8,73" fill={fill} {...stroke} />;
+      body = <polygon points="28,27 72,27 92,73 8,73" fill={fill} {...sharp} />;
       break;
     case "parallelogram":
-      body = <polygon points="28,28 92,28 72,72 8,72" fill={fill} {...stroke} />;
+      body = <polygon points="28,28 92,28 72,72 8,72" fill={fill} {...sharp} />;
       break;
     case "semicircle":
       body = <path d="M10 66 A40 40 0 0 1 90 66 Z" fill={fill} {...stroke} />;

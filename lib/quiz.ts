@@ -205,7 +205,14 @@ export function generateQuiz(settings: QuizSettings, seed: number): Question[] {
       const shape = order[(cursor + hop) % order.length];
       if (!needsCount || countable(shape) !== null) {
         cursor = (cursor + hop + 1) % order.length;
-        if (cursor === 0) order = shuffle(order, rng);
+        if (cursor === 0) {
+          order = shuffle(order, rng);
+          // Never let the reshuffled cycle start with the shape just asked -
+          // that reads as "the same question twice in a row".
+          if (order.length > 1 && order[0].id === shape.id) {
+            order.push(order.shift() as Shape);
+          }
+        }
         return shape;
       }
     }
@@ -237,6 +244,23 @@ export function generateQuiz(settings: QuizSettings, seed: number): Question[] {
     }
   }
   return questions;
+}
+
+// Grade bands mirror the countries quiz: score is out of 100, 100% = perfect
+// (gold), 80%+ = pass (confetti), 50-79% = close (orange), below 50% = miss.
+export type GradeBand = "perfect" | "pass" | "close" | "miss";
+
+export interface QuizGrade {
+  score: number;
+  band: GradeBand;
+}
+
+export function gradeFor(correct: number, total: number): QuizGrade {
+  if (total <= 0) return { score: 0, band: "miss" };
+  const score = Math.round((correct / total) * 100);
+  const band =
+    correct === total ? "perfect" : score >= 80 ? "pass" : score >= 50 ? "close" : "miss";
+  return { score, band };
 }
 
 // 3 stars for 90%+, 2 for 60%+, 1 for 30%+, 0 below.

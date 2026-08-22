@@ -68,24 +68,19 @@ body {
     background: var(--card);
     border: 2px solid var(--line);
     border-radius: 1.5rem;
-    box-shadow: 0 5px 0 var(--shadow);
-    transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.15s ease,
-      box-shadow 0.15s ease;
+    transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.15s ease;
   }
 
   .sticker-press:active {
-    transform: translateY(3px);
-    box-shadow: 0 2px 0 var(--shadow);
+    transform: translateY(2px) scale(0.98);
   }
 
   @media (hover: hover) {
     .sticker-press:hover {
       transform: translateY(-2px);
-      box-shadow: 0 7px 0 var(--shadow);
     }
     .sticker-press:hover:active {
-      transform: translateY(3px);
-      box-shadow: 0 2px 0 var(--shadow);
+      transform: translateY(2px) scale(0.98);
     }
   }
 }

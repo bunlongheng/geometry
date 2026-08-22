@@ -40,8 +40,11 @@ test("a full 5-question easy quiz reaches the stars screen", async ({ page }) =>
     await expect(page.locator("[aria-live=polite] p")).toBeVisible();
   }
 
-  await expect(page.getByText(/out of/)).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByLabel(/out of 3 stars/)).toBeVisible();
+  await expect(page.getByText(/out of/)).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByLabel(/Score \d+ out of 100/)).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /Perfect!|Winner!|So close!|Nice try!/ }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Play again" }).click();
   await expect(page.getByText("1 / 5")).toBeVisible();
 });

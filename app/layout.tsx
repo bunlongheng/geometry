@@ -3,6 +3,7 @@ import { Baloo_2, Nunito } from "next/font/google";
 import { headers } from "next/headers";
 import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
+import FloatingShapes from "@/components/FloatingShapes";
 import "./globals.css";
 
 const baloo = Baloo_2({ subsets: ["latin"], variable: "--font-baloo" });
@@ -45,6 +46,7 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${baloo.variable} ${nunito.variable} min-h-dvh font-body antialiased`}>
         <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <FloatingShapes />
         <header className="sticky top-0 z-40 border-b-2 border-line bg-bg/85 backdrop-blur">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
             <Link href="/" className="flex items-center gap-2">
