@@ -115,7 +115,7 @@ function OptionCard({
       onClick={() => onPick(index)}
       onMouseEnter={onHover}
       onFocus={onHover}
-      className={`sticker flex min-h-24 flex-col items-center justify-center gap-1 p-4 ${
+      className={`sticker flex h-full flex-col items-center justify-center gap-1 p-4 ${
         !answered ? "sticker-press" : ""
       }`}
       style={
@@ -132,9 +132,9 @@ function OptionCard({
       }
     >
       {option.kind === "shape" ? (
-        <ShapeSvg shapeId={option.shapeId} colorId={option.colorId} className="h-20 w-20 sm:h-24 sm:w-24" />
+        <ShapeSvg shapeId={option.shapeId} colorId={option.colorId} className="h-full max-h-36 w-auto min-h-20" />
       ) : (
-        <span className="font-display text-4xl font-bold">{option.label}</span>
+        <span className="font-display text-5xl font-bold">{option.label}</span>
       )}
     </button>
   );
@@ -383,7 +383,7 @@ export default function QuizGame() {
     );
   } else if (phase === "play" && question) {
     content = (
-      <>
+      <div className="flex min-h-[calc(100dvh-11rem)] flex-col gap-4">
         <div className="flex items-center justify-between gap-4">
           <span className="font-display text-lg font-bold text-ink-soft">
             {current + 1} / {questions.length}
@@ -415,7 +415,7 @@ export default function QuizGame() {
 
         <div
           key={`options-${current}`}
-          className="animate-rise-in grid grid-cols-2 gap-3"
+          className="animate-rise-in grid flex-1 grid-cols-2 grid-rows-2 gap-3"
         >
           {question.options.map((_, i) => (
             <OptionCard
@@ -448,7 +448,7 @@ export default function QuizGame() {
             </p>
           ) : null}
         </div>
-      </>
+      </div>
     );
   }
 

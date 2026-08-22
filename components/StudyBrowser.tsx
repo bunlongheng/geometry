@@ -52,7 +52,7 @@ function ShapeDetail({ shape, onClose }: { shape: Shape; onClose: () => void }) 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4 pb-[16vh] backdrop-blur-sm sm:pb-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4 backdrop-blur-sm"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
