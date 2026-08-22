@@ -56,15 +56,15 @@ export function playCorrect() {
   );
 }
 
-// Soft low two-note "aww" - wrong or time-out, not harsh.
+// Clear low "uh-oh" buzz - wrong or time-out. Audible but never harsh.
 export function playWrong() {
   notes(
     [
-      [311, 0, 0.16],
-      [233, 0.14, 0.26],
+      [220, 0, 0.2],
+      [165, 0.18, 0.32],
     ],
-    "sine",
-    0.16,
+    "triangle",
+    0.26,
   );
 }
 

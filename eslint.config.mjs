@@ -9,11 +9,7 @@ const eslintConfig = defineConfig([
     // Reading client-only state (localStorage theme, DOM dataset) in a mount
     // effect is the intentional hydration-safe pattern in these 2 components;
     // keep the rule as a warning there only, an error everywhere else.
-    files: [
-      "components/ThemeToggle.tsx",
-      "components/QuizGame.tsx",
-      "components/QuizHeaderControls.tsx",
-    ],
+    files: ["components/QuizGame.tsx", "components/SettingsMenu.tsx"],
     rules: {
       "react-hooks/set-state-in-effect": "warn",
     },

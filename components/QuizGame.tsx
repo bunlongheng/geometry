@@ -117,7 +117,7 @@ function OptionCard({
       onFocus={onHover}
       className={`sticker flex h-full flex-col items-center justify-center gap-1 p-4 ${
         !answered ? "sticker-press" : ""
-      }`}
+      } ${isPicked && !isRight ? "animate-shake" : ""}`}
       style={
         isPicked
           ? isRight

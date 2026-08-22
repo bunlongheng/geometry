@@ -51,8 +51,9 @@ test("a full 10-question easy quiz reaches the score screen", async ({ page }) =
   await expect(page.getByText("1 / 10")).toBeVisible();
 });
 
-test("theme toggle switches and persists dark mode", async ({ page }) => {
+test("theme toggle in the settings menu switches and persists dark mode", async ({ page }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: "Settings" }).click();
   await page.getByRole("button", { name: /Switch to dark mode/ }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.reload();

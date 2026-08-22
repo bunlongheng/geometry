@@ -2,9 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Baloo_2, Nunito } from "next/font/google";
 import { headers } from "next/headers";
 import Link from "next/link";
-import ThemeToggle from "@/components/ThemeToggle";
 import NavLinks from "@/components/NavLinks";
-import QuizHeaderControls from "@/components/QuizHeaderControls";
+import SettingsMenu from "@/components/SettingsMenu";
 import FloatingShapes from "@/components/FloatingShapes";
 import "./globals.css";
 
@@ -57,8 +56,7 @@ export default async function RootLayout({
             </Link>
             <nav className="flex items-center gap-2">
               <NavLinks />
-              <QuizHeaderControls />
-              <ThemeToggle />
+              <SettingsMenu />
             </nav>
           </div>
         </header>
