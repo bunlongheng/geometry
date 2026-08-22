@@ -42,12 +42,14 @@ npm run dev        # http://localhost:3035
 | `npm run typecheck` | TypeScript, no emit |
 | `npm run lint` | ESLint |
 | `npm test` | node:test suite for `lib/*` |
+| `npm run test:e2e` | Playwright e2e (study, quiz, theme) |
 
 ## Project layout
 
 ```
-app/          routes: / (home), /study, /quiz
+app/          routes: / (home), /study, /quiz + robots, sitemap
 components/   ShapeSvg, StudyBrowser, QuizGame, ThemeToggle
 lib/          pure logic: shapes data, colors, seeded rng, quiz generator
 tests/        node:test suites for lib/
+e2e/          Playwright specs (study, quiz, theme)
 ```

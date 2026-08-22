@@ -9,6 +9,7 @@ const baloo = Baloo_2({ subsets: ["latin"], variable: "--font-baloo" });
 const nunito = Nunito({ subsets: ["latin"], variable: "--font-nunito" });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://geometry-bheng.vercel.app"),
   title: "Geometry - learn shapes, play quizzes",
   description:
     "A friendly geometry playground for kids: study every 2D and 3D shape, learn its color, then beat the quiz at 3 levels.",
