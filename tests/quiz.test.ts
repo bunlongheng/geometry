@@ -17,6 +17,10 @@ const SCOPES: Scope[] = ["2d", "3d", "lines", "angles", "mixed"];
 
 function assertValid(q: Question, choices: number) {
   assert.ok(q.prompt.length > 5, "prompt present");
+  assert.ok(q.display.length > 0, "display present");
+  if (q.kind === "find-shape" || q.kind === "find-color-shape") {
+    assert.ok(!q.display.includes("Tap"), "tap questions display only the word");
+  }
   assert.ok(q.explain.length > 5, "explain present");
   assert.equal(q.options.length, q.kind === "count" ? Math.min(choices, 4) : choices);
   assert.ok(q.answerIndex >= 0 && q.answerIndex < q.options.length, "answer in range");

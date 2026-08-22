@@ -409,8 +409,8 @@ export default function QuizGame() {
           />
         </div>
 
-        <h2 key={current} className="animate-rise-in text-center font-display text-3xl font-bold">
-          {question.prompt}
+        <h2 key={current} className="animate-rise-in text-center font-display text-4xl font-bold">
+          {question.display}
         </h2>
 
         <div
@@ -444,7 +444,7 @@ export default function QuizGame() {
                 ? "Time's up!"
                 : picked === question.answerIndex
                   ? "Yes!"
-                  : "Almost!"}
+                  : "Wrong"}
             </p>
           ) : null}
         </div>

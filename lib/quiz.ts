@@ -32,7 +32,11 @@ export type QuizOption = ShapeOption | TextOption;
 
 export interface Question {
   kind: QuestionKind;
+  // Spoken aloud in full ("Tap the circle!").
   prompt: string;
+  // Shown on screen - just the word(s) for tap questions ("Circle"), so a
+  // pre-reader sees only what matters.
+  display: string;
   options: QuizOption[];
   answerIndex: number;
   // Shown after answering, right or wrong: "An octagon has 8 sides!"
@@ -86,6 +90,7 @@ function makeFindShape(target: Shape, pool: Shape[], choices: number, rng: Rng):
   return {
     kind: "find-shape",
     prompt: `Tap the ${target.name.toLowerCase()}!`,
+    display: target.name,
     options,
     answerIndex: options.findIndex((o) => o.kind === "shape" && o.shapeId === target.id),
     explain: `${target.fact}`,
@@ -127,6 +132,7 @@ function makeFindColorShape(
   return {
     kind: "find-color-shape",
     prompt: `Tap the ${color.name.toLowerCase()} ${target.name.toLowerCase()}!`,
+    display: `${color.name} ${target.name}`,
     options,
     answerIndex: options.findIndex(
       (o) => o.kind === "shape" && o.shapeId === target.id && o.colorId === color.id,
@@ -151,9 +157,11 @@ function makeCount(target: Shape, choices: number, rng: Rng): Question {
     [...numbers].map((n) => ({ kind: "text" as const, label: String(n) })),
     rng,
   );
+  const countPrompt = `How many ${info.noun} does a ${target.name.toLowerCase()} have?`;
   return {
     kind: "count",
-    prompt: `How many ${info.noun} does a ${target.name.toLowerCase()} have?`,
+    prompt: countPrompt,
+    display: countPrompt,
     options,
     answerIndex: options.findIndex(
       (o) => o.kind === "text" && o.label === String(info.value),
@@ -182,9 +190,11 @@ function makeWhichProperty(target: Shape, pool: Shape[], choices: number, rng: R
     })),
     rng,
   );
+  const whichPrompt = `Which shape has ${info.value} ${info.noun}?`;
   return {
     kind: "which-property",
-    prompt: `Which shape has ${info.value} ${info.noun}?`,
+    prompt: whichPrompt,
+    display: whichPrompt,
     options,
     answerIndex: options.findIndex((o) => o.kind === "shape" && o.shapeId === target.id),
     explain: `A ${target.name.toLowerCase()} has ${info.value} ${info.noun}.`,
