@@ -13,6 +13,16 @@ import {
   type Shape,
 } from "@/lib/shapes";
 
+// Speak only when the sound toggle (shared with the quiz) is on.
+function speakIfOn(text: string) {
+  try {
+    if (localStorage.getItem("geometry-sound") === "off") return;
+  } catch {
+    /* default on */
+  }
+  speak(text);
+}
+
 // Study mode: browse shapes by 2D/3D, tap one to open its card - big drawing,
 // signature color, countable facts, a fun fact, and a "paint it" color row so
 // kids connect each shape with every color, not just its signature one.
@@ -109,13 +119,7 @@ function ShapeDetail({
                   setPaint(c.id);
                   // Say the new combo out loud ("yellow circle") so she hears
                   // the color + shape pairing as she paints.
-                  try {
-                    if (localStorage.getItem("geometry-sound") !== "off") {
-                      speak(`${c.name.toLowerCase()} ${shape.name.toLowerCase()}`);
-                    }
-                  } catch {
-                    speak(`${c.name.toLowerCase()} ${shape.name.toLowerCase()}`);
-                  }
+                  speakIfOn(`${c.name.toLowerCase()} ${shape.name.toLowerCase()}`);
                 }}
                 aria-label={`Paint it ${c.name.toLowerCase()}`}
                 aria-pressed={paint === c.id}
@@ -193,7 +197,10 @@ export default function StudyBrowser() {
           <button
             key={shape.id}
             type="button"
-            onClick={() => setOpenIndex(i)}
+            onClick={() => {
+              setOpenIndex(i);
+              speakIfOn(`${getColor(shape.color).name} ${shape.name}`.toLowerCase());
+            }}
             className="sticker sticker-press animate-rise-in flex flex-col items-center gap-2 p-5"
             style={{ animationDelay: `${Math.min(i * 0.04, 0.6)}s` }}
           >
@@ -212,8 +219,16 @@ export default function StudyBrowser() {
         <ShapeDetail
           shape={shapes[openIndex]}
           onClose={() => setOpenIndex(null)}
-          onPrev={() => setOpenIndex((openIndex - 1 + shapes.length) % shapes.length)}
-          onNext={() => setOpenIndex((openIndex + 1) % shapes.length)}
+          onPrev={() => {
+            const i = (openIndex - 1 + shapes.length) % shapes.length;
+            setOpenIndex(i);
+            speakIfOn(`${getColor(shapes[i].color).name} ${shapes[i].name}`.toLowerCase());
+          }}
+          onNext={() => {
+            const i = (openIndex + 1) % shapes.length;
+            setOpenIndex(i);
+            speakIfOn(`${getColor(shapes[i].color).name} ${shapes[i].name}`.toLowerCase());
+          }}
         />
       ) : null}
     </div>
