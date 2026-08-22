@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { SHAPES, SHAPES_2D, SHAPES_3D, getShape } from "../lib/shapes.ts";
+import { SHAPES, SHAPES_2D, SHAPES_3D, SHAPES_LINES, SHAPES_ANGLES, getShape } from "../lib/shapes.ts";
 import { COLORS, getColor, shade } from "../lib/colors.ts";
 
 test("shape ids are unique", () => {
@@ -15,10 +15,22 @@ test("every shape has a valid signature color", () => {
   }
 });
 
-test("2D and 3D pools are non-empty and cover all shapes", () => {
+test("all 4 pools are non-empty and cover all shapes", () => {
   assert.ok(SHAPES_2D.length >= 10);
-  assert.ok(SHAPES_3D.length >= 8);
-  assert.equal(SHAPES_2D.length + SHAPES_3D.length, SHAPES.length);
+  assert.ok(SHAPES_3D.length >= 16);
+  assert.ok(SHAPES_LINES.length >= 8);
+  assert.ok(SHAPES_ANGLES.length >= 6);
+  assert.equal(
+    SHAPES_2D.length + SHAPES_3D.length + SHAPES_LINES.length + SHAPES_ANGLES.length,
+    SHAPES.length,
+  );
+});
+
+test("lines and angles never carry counts", () => {
+  for (const s of [...SHAPES_LINES, ...SHAPES_ANGLES]) {
+    assert.equal(s.sides, undefined, `${s.id} has sides`);
+    assert.equal(s.faces, undefined, `${s.id} has faces`);
+  }
 });
 
 test("2D shapes never carry 3D counts and vice versa", () => {

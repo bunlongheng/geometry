@@ -2,8 +2,16 @@
 
 import { useState } from "react";
 import ShapeSvg from "@/components/ShapeSvg";
+import { speak } from "@/components/speak";
 import { COLORS, getColor, type ColorId } from "@/lib/colors";
-import { SHAPES_2D, SHAPES_3D, type Dimension, type Shape } from "@/lib/shapes";
+import {
+  SHAPES_2D,
+  SHAPES_3D,
+  SHAPES_ANGLES,
+  SHAPES_LINES,
+  type Dimension,
+  type Shape,
+} from "@/lib/shapes";
 
 // Study mode: browse shapes by 2D/3D, tap one to open its card - big drawing,
 // signature color, countable facts, a fun fact, and a "paint it" color row so
@@ -97,7 +105,18 @@ function ShapeDetail({
               <button
                 key={c.id}
                 type="button"
-                onClick={() => setPaint(c.id)}
+                onClick={() => {
+                  setPaint(c.id);
+                  // Say the new combo out loud ("yellow circle") so she hears
+                  // the color + shape pairing as she paints.
+                  try {
+                    if (localStorage.getItem("geometry-sound") !== "off") {
+                      speak(`${c.name.toLowerCase()} ${shape.name.toLowerCase()}`);
+                    }
+                  } catch {
+                    speak(`${c.name.toLowerCase()} ${shape.name.toLowerCase()}`);
+                  }
+                }}
                 aria-label={`Paint it ${c.name.toLowerCase()}`}
                 aria-pressed={paint === c.id}
                 className="h-9 w-9 rounded-full border-2 transition-transform active:scale-90"
@@ -121,8 +140,7 @@ function ShapeDetail({
           <button
             type="button"
             onClick={onNext}
-            className="sticker sticker-press flex-1 bg-accent px-4 py-2 font-display text-lg font-bold text-white"
-            style={{ borderColor: "transparent" }}
+            className="sticker sticker-press flex-1 px-4 py-2 font-display text-lg font-bold"
           >
             Next
           </button>
@@ -135,26 +153,37 @@ function ShapeDetail({
 export default function StudyBrowser() {
   const [dimension, setDimension] = useState<Dimension>("2d");
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const shapes = dimension === "2d" ? SHAPES_2D : SHAPES_3D;
+  const POOLS: Record<Dimension, Shape[]> = {
+    "2d": SHAPES_2D,
+    "3d": SHAPES_3D,
+    lines: SHAPES_LINES,
+    angles: SHAPES_ANGLES,
+  };
+  const TABS: { id: Dimension; label: string }[] = [
+    { id: "2d", label: "2D" },
+    { id: "3d", label: "3D" },
+    { id: "lines", label: "Lines" },
+    { id: "angles", label: "Angles" },
+  ];
+  const shapes = POOLS[dimension];
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-center gap-3">
-        {(["2d", "3d"] as const).map((d) => (
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        {TABS.map((t) => (
           <button
-            key={d}
+            key={t.id}
             type="button"
             onClick={() => {
-              setDimension(d);
+              setDimension(t.id);
               setOpenIndex(null);
             }}
-            aria-pressed={dimension === d}
-            className={`sticker sticker-press px-8 py-2.5 font-display text-xl font-bold ${
-              dimension === d ? "bg-accent text-white" : ""
+            aria-pressed={dimension === t.id}
+            className={`sticker sticker-press px-6 py-2.5 font-display text-xl font-bold ${
+              dimension === t.id ? "sticker-selected" : ""
             }`}
-            style={dimension === d ? { borderColor: "transparent" } : undefined}
           >
-            {d === "2d" ? "2D - Flat" : "3D - Solid"}
+            {t.label}
           </button>
         ))}
       </div>

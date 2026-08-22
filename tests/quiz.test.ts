@@ -13,7 +13,7 @@ import { getShape } from "../lib/shapes.ts";
 import { createRng, shuffle, pick } from "../lib/rng.ts";
 
 const LEVELS: Level[] = ["easy", "medium", "hard"];
-const SCOPES: Scope[] = ["2d", "3d", "mixed"];
+const SCOPES: Scope[] = ["2d", "3d", "lines", "angles", "mixed"];
 
 function assertValid(q: Question, choices: number) {
   assert.ok(q.prompt.length > 5, "prompt present");
@@ -70,7 +70,7 @@ test("easy level only asks find-shape", () => {
 });
 
 test("scope filters shapes by dimension", () => {
-  for (const scope of ["2d", "3d"] as const) {
+  for (const scope of ["2d", "3d", "lines", "angles"] as const) {
     const qs = generateQuiz({ level: "easy", scope, count: 15 }, 11);
     for (const q of qs) {
       for (const o of q.options) {

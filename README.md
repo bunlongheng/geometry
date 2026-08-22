@@ -9,7 +9,7 @@ A friendly geometry playground for kids: study every 2D and 3D shape, learn its 
 ![React](https://img.shields.io/badge/React-19-149eca?logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06b6d4?logo=tailwindcss)
-![Tests](https://img.shields.io/badge/tests-22_unit_+_4_e2e-34c77b)
+![Tests](https://img.shields.io/badge/tests-25_unit_+_4_e2e-34c77b)
 
 **Live:** [geometry-bheng.vercel.app](https://geometry-bheng.vercel.app)
 
@@ -27,7 +27,7 @@ A friendly geometry playground for kids: study every 2D and 3D shape, learn its 
 
 ## Features
 
-- **Study mode** - browse 15 flat (2D) and 10 solid (3D) shapes. Tap any shape for its name, signature color, sides/corners or faces/edges/corners, a fun fact, and a real-world example.
+- **Study mode** - browse 16 flat (2D) and 16 solid (3D) shapes, plus 8 line types and 6 angle types. Tap any shape for its name, signature color, sides/corners or faces/edges/corners, a fun fact, and a real-world example.
 - **Paint it!** - recolor any shape in 9 colors from its detail card, so kids associate shapes with colors, not just names.
 - **Quiz mode** - 3 levels (Easy / Medium / Hard), 2D / 3D / Both scope, 5-15 questions. Question styles: "Tap the circle", "Tap the blue circle", "How many sides does a hexagon have?", "Which shape has 8 faces?".
 - **Unambiguous by construction** - the seeded generator guarantees exactly 1 option ever matches the prompt (unit-tested across every level, scope, and seed).
@@ -60,14 +60,14 @@ flowchart LR
 | `components/` | ShapeSvg, StudyBrowser, QuizGame, ThemeToggle | client interactivity |
 | `lib/` | shapes, colors, rng, quiz | pure logic, fully unit-tested |
 | `proxy.ts` | 1 file | per-request nonce CSP |
-| `tests/`, `e2e/` | node:test + Playwright | 22 unit cases, 4 e2e specs |
+| `tests/`, `e2e/` | node:test + Playwright | 25 unit cases, 4 e2e specs |
 
 ## Design decisions and trade-offs
 
 | Decision | Chosen | Alternative | Why this trade-off | Cost we accept |
 |----------|--------|-------------|--------------------|----------------|
 | Quiz generation | Seeded RNG (mulberry32) in pure `lib/quiz.ts` | Random in components | Every quiz is reproducible and the no-ambiguity invariant is provable in tests | A little plumbing to pass seeds |
-| Shape rendering | 1 inline SVG renderer for all 25 shapes | Image assets or a canvas lib | Zero network requests, recolorable at runtime, crisp at any size | A long but flat switch statement |
+| Shape rendering | 1 inline SVG renderer for all 62 shapes, lines, and angles | Image assets or a canvas lib | Zero network requests, recolorable at runtime, crisp at any size | A long but flat switch statement |
 | Curved-shape counts | Omit sides/faces for hearts, cones, spheres | Teach a convention | The quiz never asks a question with a debatable answer | Fewer counting questions in 3D |
 | CSP | Per-request nonce + strict-dynamic via `proxy.ts` | 'unsafe-inline' | Real script hardening even though the app is static | A proxy file and nonce plumbing |
 | Fonts | Self-hosted via next/font | Google Fonts CDN | Keeps connect-src 'self', no third-party calls from a kids app | Slightly larger repo build |
@@ -111,7 +111,7 @@ app/            routes: / (home), /study, /quiz + robots, sitemap
   globals.css   design tokens (light/dark) + sticker system
 components/     ShapeSvg, StudyBrowser, QuizGame, ThemeToggle
 lib/            pure logic: shapes data, colors, seeded rng, quiz generator
-tests/          node:test suites for lib/ (22 cases)
+tests/          node:test suites for lib/ (25 cases)
 e2e/            Playwright specs (study, quiz, theme)
 proxy.ts        per-request nonce CSP (Next 16 middleware)
 ```

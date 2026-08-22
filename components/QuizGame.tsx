@@ -2,21 +2,15 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import ShapeSvg from "@/components/ShapeSvg";
-import {
-  GearIcon,
-  RetryIcon,
-  SpeakerOffIcon,
-  SpeakerOnIcon,
-  TargetIcon,
-  TrophyIcon,
-} from "@/components/Icons";
+import { RetryIcon, TargetIcon, TrophyIcon } from "@/components/Icons";
+import { RocketFlyer, ShootingStarFlyer, SuperKidFlyer } from "@/components/Flyers";
 import { speak, stopSpeaking } from "@/components/speak";
 import { playCorrect, playHover, playLose, playTick, playWin, playWrong } from "@/components/sound";
 import { getColor } from "@/lib/colors";
 import {
   generateQuiz,
   gradeFor,
-  QUESTION_COUNTS,
+  QUIZ_LENGTH,
   type Level,
   type Question,
   type QuizSettings,
@@ -26,26 +20,28 @@ import {
 const SETTINGS_KEY = "geometry-quiz-settings";
 const SOUND_KEY = "geometry-sound";
 
-const DEFAULT_SETTINGS: QuizSettings = { level: "easy", scope: "2d", count: 5 };
+const DEFAULT_SETTINGS: QuizSettings = { level: "easy", scope: "2d", count: QUIZ_LENGTH };
 
 // Per-question countdown shrinks as the level goes up (countries quiz pattern).
-// Each level wears one of the app's own shapes - no emoji, ever (owner rule).
-const LEVEL_META: {
-  id: Level;
-  label: string;
-  hint: string;
-  shape: { id: string; color: "green" | "yellow" | "red" };
-  secs: number;
-}[] = [
-  { id: "easy", label: "Easy", hint: "Find the shape - 20s", shape: { id: "circle", color: "green" }, secs: 20 },
-  { id: "medium", label: "Medium", hint: "Shapes + colors - 15s", shape: { id: "star", color: "yellow" }, secs: 15 },
-  { id: "hard", label: "Hard", hint: "Tricky questions - 10s", shape: { id: "octagon", color: "red" }, secs: 10 },
+// Difficulty reads as a star rating: 1, 2, or 3 stars.
+const LEVEL_META: { id: Level; label: string; hint: string; stars: number; secs: number }[] = [
+  { id: "easy", label: "Easy", hint: "Find the shape - 20s", stars: 1, secs: 20 },
+  { id: "medium", label: "Medium", hint: "Shapes + colors - 15s", stars: 2, secs: 15 },
+  { id: "hard", label: "Hard", hint: "Tricky questions - 10s", stars: 3, secs: 10 },
 ];
 
-const SCOPE_META: { id: Scope; label: string; hint: string }[] = [
-  { id: "2d", label: "2D", hint: "Flat shapes" },
-  { id: "3d", label: "3D", hint: "Solid shapes" },
-  { id: "mixed", label: "Both", hint: "Everything!" },
+// Each scope shows 1 shape from its own pool as its icon.
+const SCOPE_META: {
+  id: Scope;
+  label: string;
+  hint: string;
+  icon: { id: string; color: "red" | "green" | "blue" | "orange" | "purple" };
+}[] = [
+  { id: "2d", label: "2D", hint: "Flat shapes", icon: { id: "circle", color: "red" } },
+  { id: "3d", label: "3D", hint: "Solid shapes", icon: { id: "cube", color: "green" } },
+  { id: "lines", label: "Lines", hint: "Rays + more", icon: { id: "line", color: "blue" } },
+  { id: "angles", label: "Angles", hint: "Corners!", icon: { id: "right-angle", color: "orange" } },
+  { id: "mixed", label: "All", hint: "Everything!", icon: { id: "hexagon", color: "purple" } },
 ];
 
 function loadSettings(): QuizSettings {
@@ -59,12 +55,7 @@ function loadSettings(): QuizSettings {
     const scope = SCOPE_META.some((s) => s.id === parsed.scope)
       ? (parsed.scope as Scope)
       : DEFAULT_SETTINGS.scope;
-    const count = QUESTION_COUNTS.includes(
-      parsed.count as (typeof QUESTION_COUNTS)[number],
-    )
-      ? (parsed.count as number)
-      : DEFAULT_SETTINGS.count;
-    return { level, scope, count };
+    return { level, scope, count: QUIZ_LENGTH };
   } catch {
     return DEFAULT_SETTINGS;
   }
@@ -159,6 +150,8 @@ export default function QuizGame() {
   const [results, setResults] = useState<Outcome[]>([]);
   const [remaining, setRemaining] = useState(0);
   const [confetti, setConfetti] = useState<ConfettiPiece[]>([]);
+  const [flyer, setFlyer] = useState<"super" | "star" | "rocket" | null>(null);
+  const flyerTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const deadlineRef = useRef(0);
   const tickAtRef = useRef(0);
@@ -176,9 +169,24 @@ export default function QuizGame() {
     } catch {
       /* default on */
     }
-    return () => {
+    // The sound + gear buttons live in the app header (QuizHeaderControls) and
+    // talk to the game through these window events.
+    const onSound = (e: Event) => setSoundOn(Boolean((e as CustomEvent).detail));
+    const onOpenSettings = () => {
       if (advanceTimer.current) clearTimeout(advanceTimer.current);
       stopSpeaking();
+      setPicked(null);
+      setConfetti([]);
+      setPhase("setup");
+    };
+    window.addEventListener("geometry-sound", onSound);
+    window.addEventListener("geometry-quiz-open-settings", onOpenSettings);
+    return () => {
+      if (advanceTimer.current) clearTimeout(advanceTimer.current);
+      if (flyerTimer.current) clearTimeout(flyerTimer.current);
+      stopSpeaking();
+      window.removeEventListener("geometry-sound", onSound);
+      window.removeEventListener("geometry-quiz-open-settings", onOpenSettings);
     };
   }, []);
 
@@ -190,19 +198,6 @@ export default function QuizGame() {
       } catch {
         // Not persisted - fine.
       }
-      return next;
-    });
-  };
-
-  const toggleSound = () => {
-    setSoundOn((on) => {
-      const next = !on;
-      try {
-        localStorage.setItem(SOUND_KEY, next ? "on" : "off");
-      } catch {
-        /* fine */
-      }
-      if (!next) stopSpeaking();
       return next;
     });
   };
@@ -234,6 +229,18 @@ export default function QuizGame() {
         if (correct) playCorrect();
         else playWrong();
       }
+      // Motivation fly-bys: 1st correct, 5th correct, and question 9 no matter
+      // what - a little cheer to carry her to the finish line.
+      const newCorrect = correctCount + (correct ? 1 : 0);
+      let cheer: "super" | "star" | "rocket" | null = null;
+      if (correct && newCorrect === 1) cheer = "super";
+      else if (correct && newCorrect === 5) cheer = "star";
+      else if (current + 1 === 9) cheer = "rocket";
+      if (cheer) {
+        setFlyer(cheer);
+        if (flyerTimer.current) clearTimeout(flyerTimer.current);
+        flyerTimer.current = setTimeout(() => setFlyer(null), 1900);
+      }
       advanceTimer.current = setTimeout(
         () => {
           setPicked(null);
@@ -246,7 +253,7 @@ export default function QuizGame() {
         correct ? 1300 : 2300,
       );
     },
-    [picked, question, soundOn, current, questions.length],
+    [picked, question, soundOn, current, questions.length, correctCount],
   );
 
   // Countdown for the active, unanswered question (deadline-based, 100ms tick).
@@ -257,6 +264,12 @@ export default function QuizGame() {
     setRemaining(secsPerQ * 1000);
     const id = setInterval(() => {
       const left = Math.max(0, deadlineRef.current - performance.now());
+      // Background tab: freeze the countdown so a forgotten quiz never times
+      // out and plays sounds on its own.
+      if (document.hidden) {
+        deadlineRef.current = performance.now() + left;
+        return;
+      }
       setRemaining(left);
       const secs = Math.ceil(left / 1000);
       if (secs <= 5 && secs > 0 && secs < tickAtRef.current) {
@@ -296,52 +309,12 @@ export default function QuizGame() {
   const secondsLeft = Math.ceil(remaining / 1000);
   const timeLow = picked === null && secondsLeft <= 5;
 
-  const soundButton = (
-    <button
-      type="button"
-      onClick={toggleSound}
-      aria-label={soundOn ? "Turn sound off" : "Turn sound on"}
-      className="sticker sticker-press flex h-10 w-10 items-center justify-center text-lg"
-      style={{ borderRadius: "9999px" }}
-    >
-      {soundOn ? (
-        <SpeakerOnIcon className="h-5 w-5" />
-      ) : (
-        <SpeakerOffIcon className="h-5 w-5" />
-      )}
-    </button>
-  );
-
-  const goToSettings = () => {
-    if (advanceTimer.current) clearTimeout(advanceTimer.current);
-    stopSpeaking();
-    setPicked(null);
-    setConfetti([]);
-    setPhase("setup");
-  };
-
-  // Owner rule: settings live top-right, always.
-  const topRightControls = (
-    <div className="flex items-center gap-2">
-      {soundButton}
-      <button
-        type="button"
-        onClick={goToSettings}
-        aria-label="Quiz settings"
-        className="sticker sticker-press flex h-10 w-10 items-center justify-center text-lg"
-        style={{ borderRadius: "9999px" }}
-      >
-        <GearIcon className="h-5 w-5" />
-      </button>
-    </div>
-  );
-
   let content: React.ReactNode = null;
 
   if (phase === "setup") {
     content = (
       <>
-        <div className="pr-24 text-center sm:pr-0">
+        <div className="text-center">
           <h1 className="font-display text-4xl font-bold">Quiz time!</h1>
           <p className="mt-1 font-semibold text-ink-soft">
             Pick your level and shapes, beat the timer, score up to 100!
@@ -357,19 +330,16 @@ export default function QuizGame() {
                 onClick={() => updateSettings({ level: l.id })}
                 aria-pressed={settings.level === l.id}
                 className={`sticker sticker-press flex flex-col items-center gap-1 px-2 py-4 ${
-                  settings.level === l.id ? "bg-accent text-white" : ""
+                  settings.level === l.id ? "sticker-selected" : ""
                 }`}
-                style={settings.level === l.id ? { borderColor: "transparent" } : undefined}
               >
-                <span aria-hidden>
-                  <ShapeSvg shapeId={l.shape.id} colorId={l.shape.color} className="h-8 w-8" />
+                <span className="flex gap-0.5" aria-hidden>
+                  {Array.from({ length: l.stars }, (_, i) => (
+                    <ShapeSvg key={i} shapeId="star" colorId="yellow" className="h-6 w-6" />
+                  ))}
                 </span>
                 <span className="font-display text-lg font-bold">{l.label}</span>
-                <span
-                  className={`text-center text-xs font-semibold leading-tight ${
-                    settings.level === l.id ? "text-white/85" : "text-ink-soft"
-                  }`}
-                >
+                <span className="text-center text-xs font-semibold leading-tight text-ink-soft">
                   {l.hint}
                 </span>
               </button>
@@ -379,7 +349,7 @@ export default function QuizGame() {
 
         <section className="flex flex-col gap-3">
           <h2 className="font-display text-xl font-bold">Which shapes?</h2>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
             {SCOPE_META.map((s) => (
               <button
                 key={s.id}
@@ -387,42 +357,19 @@ export default function QuizGame() {
                 onClick={() => updateSettings({ scope: s.id })}
                 aria-pressed={settings.scope === s.id}
                 className={`sticker sticker-press flex flex-col items-center gap-1 px-2 py-4 ${
-                  settings.scope === s.id ? "bg-accent text-white" : ""
+                  settings.scope === s.id ? "sticker-selected" : ""
                 }`}
-                style={settings.scope === s.id ? { borderColor: "transparent" } : undefined}
               >
-                <span className="font-display text-2xl font-bold">{s.label}</span>
-                <span
-                  className={`text-xs font-semibold ${
-                    settings.scope === s.id ? "text-white/85" : "text-ink-soft"
-                  }`}
-                >
-                  {s.hint}
+                <span aria-hidden>
+                  <ShapeSvg shapeId={s.icon.id} colorId={s.icon.color} className="h-7 w-7" />
                 </span>
+                <span className="font-display text-xl font-bold">{s.label}</span>
+                <span className="text-xs font-semibold text-ink-soft">{s.hint}</span>
               </button>
             ))}
           </div>
         </section>
 
-        <section className="flex flex-col gap-3">
-          <h2 className="font-display text-xl font-bold">How many questions?</h2>
-          <div className="grid grid-cols-3 gap-3">
-            {QUESTION_COUNTS.map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => updateSettings({ count: n })}
-                aria-pressed={settings.count === n}
-                className={`sticker sticker-press py-3 font-display text-2xl font-bold ${
-                  settings.count === n ? "bg-accent text-white" : ""
-                }`}
-                style={settings.count === n ? { borderColor: "transparent" } : undefined}
-              >
-                {n}
-              </button>
-            ))}
-          </div>
-        </section>
 
         <button
           type="button"
@@ -437,7 +384,7 @@ export default function QuizGame() {
   } else if (phase === "play" && question) {
     content = (
       <>
-        <div className="flex items-center gap-4 pr-24">
+        <div className="flex items-center justify-between gap-4">
           <span className="font-display text-lg font-bold text-ink-soft">
             {current + 1} / {questions.length}
           </span>
@@ -618,11 +565,21 @@ export default function QuizGame() {
     );
   }
 
-  // Single wrapper for every phase: ALL controls pinned top top right,
-  // responsive (owner rule).
   return (
-    <div className="relative mx-auto flex w-full max-w-lg flex-col gap-5">
-      <div className="absolute right-0 top-0 z-30">{topRightControls}</div>
+    <div className="mx-auto flex w-full max-w-lg flex-col gap-5">
+      {flyer ? (
+        <div className="pointer-events-none fixed left-0 top-[30%] z-50 w-full" aria-hidden>
+          <div className="animate-fly-across w-32 sm:w-40">
+            {flyer === "super" ? (
+              <SuperKidFlyer className="h-auto w-full" />
+            ) : flyer === "star" ? (
+              <ShootingStarFlyer className="h-auto w-full" />
+            ) : (
+              <RocketFlyer className="h-auto w-full" />
+            )}
+          </div>
+        </div>
+      ) : null}
       {content}
     </div>
   );

@@ -34,8 +34,8 @@ export default function HomePage() {
           className="animate-rise-in mx-auto mt-4 max-w-md text-lg font-semibold text-ink-soft"
           style={{ animationDelay: "0.1s" }}
         >
-          Meet all {SHAPES_2D.length} flat shapes and {SHAPES_3D.length} solid shapes, learn
-          their colors, then beat the quiz!
+          Meet {SHAPES_2D.length} flat shapes, {SHAPES_3D.length} solid shapes, plus lines
+          and angles - learn their colors, then beat the 10-question quiz!
         </p>
       </section>
 

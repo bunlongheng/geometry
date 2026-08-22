@@ -16,6 +16,7 @@
   --good: #34c77b;
   --bad: #ff5d5d;
   --shadow: rgba(67, 53, 107, 0.12);
+  --selected-bg: #efedea;
 }
 
 [data-theme="dark"] {
@@ -31,6 +32,7 @@
   --good: #34c77b;
   --bad: #ff5d5d;
   --shadow: rgba(0, 0, 0, 0.4);
+  --selected-bg: #362d59;
 }
 
 @theme inline {
@@ -69,6 +71,13 @@ body {
     border: 2px solid var(--line);
     border-radius: 1.5rem;
     transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.15s ease;
+  }
+
+  /* Selected state: neutral - a bold ink outline on the soft bg, never a
+     colored fill, so the shape colors stay the loudest thing on screen. */
+  .sticker-selected {
+    border-color: var(--ink);
+    background: var(--selected-bg);
   }
 
   .sticker-press:active {
@@ -159,6 +168,19 @@ body {
   }
 }
 
+@keyframes fly-across {
+  0% {
+    transform: translate(-18vw, 24px) rotate(-6deg);
+  }
+  100% {
+    transform: translate(112vw, -36px) rotate(5deg);
+  }
+}
+
+.animate-fly-across {
+  animation: fly-across 1.8s cubic-bezier(0.3, 0.4, 0.6, 0.7) both;
+}
+
 @keyframes star-pop {
   0% {
     transform: scale(0) rotate(-30deg);
@@ -196,7 +218,8 @@ body {
   .animate-rise-in,
   .animate-shake,
   .animate-bounce-big,
-  .animate-star-pop {
+  .animate-star-pop,
+  .animate-fly-across {
     animation: none;
   }
 }

@@ -3,7 +3,7 @@ import { getShape, SHAPES, type Dimension, type Shape } from "./shapes.ts";
 import { createRng, pick, shuffle, type Rng } from "./rng.ts";
 
 export type Level = "easy" | "medium" | "hard";
-export type Scope = "2d" | "3d" | "mixed";
+export type Scope = "2d" | "3d" | "lines" | "angles" | "mixed";
 
 export interface QuizSettings {
   level: Level;
@@ -52,7 +52,8 @@ const LEVELS: Record<Level, LevelConfig> = {
   hard: { choices: 4, kinds: ["find-color-shape", "count", "which-property"] },
 };
 
-export const QUESTION_COUNTS = [5, 10, 15] as const;
+// Every quiz is exactly 10 questions (owner rule) - 10 points each, score /100.
+export const QUIZ_LENGTH = 10;
 
 function poolFor(scope: Scope): Shape[] {
   if (scope === "mixed") return SHAPES;
@@ -65,7 +66,7 @@ function countable(shape: Shape): { value: number; noun: string } | null {
     if (shape.sides === undefined || shape.sides === 0) return null;
     return { value: shape.sides, noun: "sides" };
   }
-  if (shape.faces === undefined) return null;
+  if (shape.dimension !== "3d" || shape.faces === undefined) return null;
   return { value: shape.faces, noun: "faces" };
 }
 
@@ -281,4 +282,6 @@ export function describeOption(option: QuizOption): string {
 export const DIMENSION_LABELS: Record<Dimension, string> = {
   "2d": "2D",
   "3d": "3D",
+  lines: "Lines",
+  angles: "Angles",
 };

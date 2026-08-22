@@ -1,6 +1,6 @@
 import type { ColorId } from "./colors.ts";
 
-export type Dimension = "2d" | "3d";
+export type Dimension = "2d" | "3d" | "lines" | "angles";
 
 export interface Shape {
   id: string;
@@ -168,6 +168,16 @@ export const SHAPES: Shape[] = [
     fact: "A crescent is the shape of the moon when we only see a sliver of it.",
     example: "the moon",
   },
+  {
+    id: "cross",
+    name: "Cross",
+    dimension: "2d",
+    color: "teal",
+    sides: 12,
+    corners: 12,
+    fact: "A cross is 2 rectangles glued together - count its 12 sides!",
+    example: "a first-aid sign",
+  },
   // ---- 3D ----
   {
     id: "sphere",
@@ -264,10 +274,186 @@ export const SHAPES: Shape[] = [
     fact: "An octahedron is 2 pyramids glued together - it has 8 triangle faces.",
     example: "a cut gemstone",
   },
+  {
+    id: "tetrahedron",
+    name: "Tetrahedron",
+    dimension: "3d",
+    color: "green",
+    faces: 4,
+    edges: 6,
+    vertices: 4,
+    fact: "A tetrahedron is the simplest solid - every 1 of its 4 faces is a triangle.",
+    example: "a 4-sided game dice",
+  },
+  {
+    id: "hexprism",
+    name: "Hexagonal Prism",
+    dimension: "3d",
+    color: "orange",
+    faces: 8,
+    edges: 18,
+    vertices: 12,
+    fact: "A hexagonal prism is a hexagon stretched into 3D - hold a pencil and look at its end!",
+    example: "an unsharpened pencil",
+  },
+  {
+    id: "pentprism",
+    name: "Pentagonal Prism",
+    dimension: "3d",
+    color: "purple",
+    faces: 7,
+    edges: 15,
+    vertices: 10,
+    fact: "A pentagonal prism is a pentagon stretched into 3D - it has 7 faces.",
+    example: "a house-shaped block",
+  },
+  {
+    id: "dodecahedron",
+    name: "Dodecahedron",
+    dimension: "3d",
+    color: "blue",
+    faces: 12,
+    edges: 30,
+    vertices: 20,
+    fact: "Dodeca means 12 - a dodecahedron has 12 faces and every 1 is a pentagon.",
+    example: "a 12-sided game dice",
+  },
+  {
+    id: "ellipsoid",
+    name: "Ellipsoid",
+    dimension: "3d",
+    color: "pink",
+    fact: "An ellipsoid is a stretched sphere - round everywhere but longer 1 way.",
+    example: "a rugby ball",
+  },
+  {
+    id: "frustum",
+    name: "Frustum",
+    dimension: "3d",
+    color: "yellow",
+    fact: "A frustum is a cone with its pointy top sliced off flat.",
+    example: "a flowerpot",
+  },
+  // ---- Lines ----
+  {
+    id: "line",
+    name: "Line",
+    dimension: "lines",
+    color: "blue",
+    fact: "A line goes on forever in both directions - the arrows show it never stops.",
+    example: "a laser beam",
+  },
+  {
+    id: "segment",
+    name: "Line Segment",
+    dimension: "lines",
+    color: "green",
+    fact: "A line segment is a piece of a line with 2 endpoints.",
+    example: "the edge of a ruler",
+  },
+  {
+    id: "ray",
+    name: "Ray",
+    dimension: "lines",
+    color: "orange",
+    fact: "A ray starts at 1 point and goes on forever in 1 direction.",
+    example: "a sunbeam",
+  },
+  {
+    id: "parallel",
+    name: "Parallel Lines",
+    dimension: "lines",
+    color: "purple",
+    fact: "Parallel lines run side by side and never ever touch.",
+    example: "train tracks",
+  },
+  {
+    id: "perpendicular",
+    name: "Perpendicular Lines",
+    dimension: "lines",
+    color: "teal",
+    fact: "Perpendicular lines cross making 4 perfect square corners.",
+    example: "a plus sign",
+  },
+  {
+    id: "intersecting",
+    name: "Intersecting Lines",
+    dimension: "lines",
+    color: "red",
+    fact: "Intersecting lines cross each other at exactly 1 point.",
+    example: "open scissors",
+  },
+  {
+    id: "curve",
+    name: "Curved Line",
+    dimension: "lines",
+    color: "pink",
+    fact: "A curved line bends smoothly - no corners at all.",
+    example: "a playground slide",
+  },
+  {
+    id: "zigzag",
+    name: "Zigzag",
+    dimension: "lines",
+    color: "yellow",
+    fact: "A zigzag is straight pieces that turn sharply back and forth.",
+    example: "a lightning bolt",
+  },
+  // ---- Angles ----
+  {
+    id: "right-angle",
+    name: "Right Angle",
+    dimension: "angles",
+    color: "green",
+    fact: "A right angle makes a perfect square corner - exactly 90 degrees.",
+    example: "the corner of a book",
+  },
+  {
+    id: "acute-angle",
+    name: "Acute Angle",
+    dimension: "angles",
+    color: "blue",
+    fact: "An acute angle is small and sharp - less than 90 degrees.",
+    example: "the tip of a pizza slice",
+  },
+  {
+    id: "obtuse-angle",
+    name: "Obtuse Angle",
+    dimension: "angles",
+    color: "orange",
+    fact: "An obtuse angle is wide open - more than 90 degrees.",
+    example: "a reclining chair",
+  },
+  {
+    id: "straight-angle",
+    name: "Straight Angle",
+    dimension: "angles",
+    color: "purple",
+    fact: "A straight angle opens all the way flat - 180 degrees, a straight line.",
+    example: "an open book laid flat",
+  },
+  {
+    id: "reflex-angle",
+    name: "Reflex Angle",
+    dimension: "angles",
+    color: "red",
+    fact: "A reflex angle bends past the flat line - more than 180 degrees.",
+    example: "a clock showing 8 o'clock",
+  },
+  {
+    id: "full-angle",
+    name: "Full Turn",
+    dimension: "angles",
+    color: "teal",
+    fact: "A full turn spins all the way around - 360 degrees.",
+    example: "a spinning wheel",
+  },
 ];
 
 export const SHAPES_2D = SHAPES.filter((s) => s.dimension === "2d");
 export const SHAPES_3D = SHAPES.filter((s) => s.dimension === "3d");
+export const SHAPES_LINES = SHAPES.filter((s) => s.dimension === "lines");
+export const SHAPES_ANGLES = SHAPES.filter((s) => s.dimension === "angles");
 
 const BY_ID = new Map(SHAPES.map((s) => [s.id, s]));
 

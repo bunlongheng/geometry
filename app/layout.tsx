@@ -3,6 +3,8 @@ import { Baloo_2, Nunito } from "next/font/google";
 import { headers } from "next/headers";
 import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
+import NavLinks from "@/components/NavLinks";
+import QuizHeaderControls from "@/components/QuizHeaderControls";
 import FloatingShapes from "@/components/FloatingShapes";
 import "./globals.css";
 
@@ -54,18 +56,8 @@ export default async function RootLayout({
               <span className="font-display text-2xl font-bold tracking-tight">Geometry</span>
             </Link>
             <nav className="flex items-center gap-2">
-              <Link
-                href="/study"
-                className="sticker sticker-press px-4 py-1.5 font-display text-base font-semibold"
-              >
-                Study
-              </Link>
-              <Link
-                href="/quiz"
-                className="sticker sticker-press px-4 py-1.5 font-display text-base font-semibold"
-              >
-                Quiz
-              </Link>
+              <NavLinks />
+              <QuizHeaderControls />
               <ThemeToggle />
             </nav>
           </div>

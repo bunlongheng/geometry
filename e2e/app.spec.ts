@@ -21,20 +21,19 @@ test("study mode browses 2D and 3D and opens a detail card", async ({ page }) =>
   await expect(dialog.getByRole("heading", { name: "Square" })).toBeVisible();
   await dialog.getByRole("button", { name: "Close" }).click();
   // Switch to 3D
-  await page.getByRole("button", { name: "3D - Solid" }).click();
+  await page.getByRole("button", { name: "3D", exact: true }).click();
   await expect(page.getByRole("button", { name: "Sphere Sphere", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: /Cube/ }).first()).toBeVisible();
 });
 
-test("a full 5-question easy quiz reaches the stars screen", async ({ page }) => {
+test("a full 10-question easy quiz reaches the score screen", async ({ page }) => {
   await page.goto("/quiz");
   await page.getByRole("button", { name: /Easy/ }).click();
   await page.getByRole("button", { name: /2D/ }).first().click();
-  await page.getByRole("button", { name: "5", exact: true }).click();
   await page.getByRole("button", { name: "Start!" }).click();
 
-  for (let i = 0; i < 5; i++) {
-    await expect(page.getByText(`${i + 1} / 5`)).toBeVisible();
+  for (let i = 0; i < 10; i++) {
+    await expect(page.getByText(`${i + 1} / 10`)).toBeVisible();
     // Tap the first enabled option card; feedback appears, then it auto-advances.
     await page.locator("div.grid.animate-rise-in > button:not([disabled])").first().click();
     await expect(page.locator("[aria-live=polite] p")).toBeVisible();
@@ -46,7 +45,7 @@ test("a full 5-question easy quiz reaches the stars screen", async ({ page }) =>
     page.getByRole("heading", { name: /Perfect!|Winner!|So close!|Nice try!/ }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Play again" }).click();
-  await expect(page.getByText("1 / 5")).toBeVisible();
+  await expect(page.getByText("1 / 10")).toBeVisible();
 });
 
 test("theme toggle switches and persists dark mode", async ({ page }) => {

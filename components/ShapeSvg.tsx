@@ -41,6 +41,13 @@ export default function ShapeSvg({ shapeId, colorId, className, title }: ShapeSv
   // Straight-edged shapes keep TRUE sharp corners (owner rule: a rounded
   // rectangle confuses corner-learning) - miter join, no corner radius.
   const sharp = { stroke: line, strokeWidth: 4, strokeLinejoin: "miter" as const };
+  // Line/angle glyphs are stroke drawings in the palette color itself.
+  const lineStroke = {
+    stroke: fill,
+    strokeWidth: 6,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+  };
 
   let body: React.ReactNode;
   switch (shapeId) {
@@ -99,6 +106,15 @@ export default function ShapeSvg({ shapeId, colorId, className, title }: ShapeSv
           d="M63 10 A41 41 0 1 0 63 90 A33 33 0 1 1 63 10 Z"
           fill={fill}
           {...stroke}
+        />
+      );
+      break;
+    case "cross":
+      body = (
+        <polygon
+          points="38,10 62,10 62,38 90,38 90,62 62,62 62,90 38,90 38,62 10,62 10,38 38,38"
+          fill={fill}
+          {...sharp}
         />
       );
       break;
@@ -161,10 +177,11 @@ export default function ShapeSvg({ shapeId, colorId, className, title }: ShapeSv
       );
       break;
     case "prism":
+      // Tent orientation: sloped roof face behind, triangular front face on top.
       body = (
         <>
-          <polygon points="30,20 58,74 2,74" fill={lite} transform="translate(14 4)" {...stroke} />
-          <polygon points="44,24 84,36 84,84 58,78" fill={dark} {...stroke} />
+          <polygon points="36,26 64,16 88,66 60,76" fill={dark} {...stroke} />
+          <polygon points="36,26 60,76 12,76" fill={lite} {...stroke} />
         </>
       );
       break;
@@ -177,23 +194,202 @@ export default function ShapeSvg({ shapeId, colorId, className, title }: ShapeSv
             fillRule="evenodd"
             {...stroke}
           />
-          <ellipse cx="38" cy="30" rx="12" ry="6" fill={lite} opacity="0.8" transform="rotate(-16 38 30)" />
+          <path d="M26 34 A30 20 0 0 1 74 34" fill="none" stroke={lite} strokeWidth="6" strokeLinecap="round" opacity="0.7" />
         </>
       );
       break;
     case "hemisphere":
+      // Dome sitting flat-side down: the dark underside lip peeks out below.
       body = (
         <>
-          <path d="M12 58 A38 38 0 0 1 88 58 Z" fill={fill} {...stroke} />
-          <ellipse cx="50" cy="58" rx="38" ry="13" fill={lite} {...stroke} />
+          <ellipse cx="50" cy="60" rx="38" ry="12" fill={dark} {...stroke} />
+          <path d="M12 60 A38 38 0 0 1 88 60 L12 60 Z" fill={fill} {...stroke} />
         </>
       );
       break;
     case "octahedron":
+      // 4 visible faces around a raised middle edge - reads as 2 glued pyramids.
       body = (
         <>
-          <polygon points="50,6 22,50 50,94" fill={lite} {...stroke} />
-          <polygon points="50,6 78,50 50,94" fill={dark} {...stroke} />
+          <polygon points="50,6 16,46 50,58" fill={lite} {...stroke} />
+          <polygon points="50,6 84,46 50,58" fill={fill} {...stroke} />
+          <polygon points="16,46 50,58 50,94" fill={dark} {...stroke} />
+          <polygon points="84,46 50,58 50,94" fill={shade(fill, -0.34)} {...stroke} />
+        </>
+      );
+      break;
+    case "tetrahedron":
+      body = (
+        <>
+          <polygon points="50,10 14,78 60,86" fill={lite} {...stroke} />
+          <polygon points="50,10 86,72 60,86" fill={dark} {...stroke} />
+        </>
+      );
+      break;
+    case "hexprism":
+      // Vertical pencil-style prism: squashed hex top + 2 body faces.
+      body = (
+        <>
+          <polygon points="26,28 38,18 62,18 74,28 50,38" fill={lite} {...stroke} />
+          <polygon points="26,28 50,38 50,88 26,78" fill={fill} {...stroke} />
+          <polygon points="50,38 74,28 74,78 50,88" fill={dark} {...stroke} />
+        </>
+      );
+      break;
+    case "pentprism":
+      // Extruded pentagon: dark back face peeking behind the light front.
+      body = (
+        <>
+          <polygon points={regularPolygon(5, 60, 44, 32)} fill={dark} {...stroke} />
+          <polygon points={regularPolygon(5, 42, 56, 32)} fill={lite} {...stroke} />
+        </>
+      );
+      break;
+    case "dodecahedron":
+      // d12 dice: pentagon face framed by a 10-sided shaded ring.
+      body = (
+        <>
+          <polygon points={regularPolygon(10, 50, 50, 42, -90)} fill={dark} {...stroke} />
+          <polygon points={regularPolygon(5, 50, 50, 25)} fill={lite} {...stroke} />
+        </>
+      );
+      break;
+    case "ellipsoid":
+      body = (
+        <>
+          <defs>
+            <radialGradient id={`${uid}-e`} cx="0.36" cy="0.32" r="0.9">
+              <stop offset="0%" stopColor={lite} />
+              <stop offset="70%" stopColor={fill} />
+              <stop offset="100%" stopColor={dark} />
+            </radialGradient>
+          </defs>
+          <ellipse cx="50" cy="50" rx="42" ry="27" fill={`url(#${uid}-e)`} {...stroke} />
+          <ellipse cx="36" cy="40" rx="12" ry="6" fill="#ffffff" opacity="0.4" transform="rotate(-18 36 40)" />
+        </>
+      );
+      break;
+    case "frustum":
+      // Flowerpot: sliced cone with a light top ellipse and dark bottom curve.
+      body = (
+        <>
+          <path d="M30 30 L16 72 A34 11 0 0 0 84 72 L70 30" fill={fill} {...stroke} />
+          <path d="M16 72 A34 11 0 0 0 84 72 A34 11 0 0 0 16 72" fill={dark} {...stroke} />
+          <ellipse cx="50" cy="30" rx="20" ry="8" fill={lite} {...stroke} />
+        </>
+      );
+      break;
+    // ---- Lines ---- (stroke drawings; arrowheads come from the shared marker)
+    case "line":
+      body = <line x1="8" y1="50" x2="92" y2="50" {...lineStroke} />;
+      break;
+    case "segment":
+      body = (
+        <>
+          <line x1="18" y1="50" x2="82" y2="50" {...lineStroke} />
+          <circle cx="18" cy="50" r="6" fill={fill} />
+          <circle cx="82" cy="50" r="6" fill={fill} />
+        </>
+      );
+      break;
+    case "ray":
+      body = (
+        <>
+          <line x1="18" y1="50" x2="92" y2="50" {...lineStroke} />
+          <circle cx="18" cy="50" r="7" fill={fill} />
+        </>
+      );
+      break;
+    case "parallel":
+      body = (
+        <>
+          <line x1="14" y1="38" x2="86" y2="38" {...lineStroke} />
+          <line x1="14" y1="62" x2="86" y2="62" {...lineStroke} />
+        </>
+      );
+      break;
+    case "perpendicular":
+      body = (
+        <>
+          <line x1="12" y1="70" x2="88" y2="70" {...lineStroke} />
+          <line x1="50" y1="12" x2="50" y2="70" {...lineStroke} />
+          <path d="M50 54 L66 54 L66 70" fill="none" stroke={dark} strokeWidth="3" />
+        </>
+      );
+      break;
+    case "intersecting":
+      body = (
+        <>
+          <line x1="16" y1="28" x2="84" y2="72" {...lineStroke} />
+          <line x1="16" y1="72" x2="84" y2="28" {...lineStroke} />
+        </>
+      );
+      break;
+    case "curve":
+      body = (
+        <path d="M14 68 C32 22 58 84 86 34" fill="none" {...lineStroke} />
+      );
+      break;
+    case "zigzag":
+      body = (
+        <polyline points="12,68 32,32 52,68 72,32 88,54" fill="none" {...lineStroke} />
+      );
+      break;
+    // ---- Angles ---- (2 rays from a vertex + an arc marking the opening)
+    case "right-angle":
+      body = (
+        <>
+          <path d="M26 60 L44 60 L44 78" fill="none" stroke={dark} strokeWidth="3.5" />
+          <line x1="26" y1="78" x2="90" y2="78" {...lineStroke} />
+          <line x1="26" y1="78" x2="26" y2="14" {...lineStroke} />
+          <circle cx="26" cy="78" r="5" fill={fill} />
+        </>
+      );
+      break;
+    case "acute-angle":
+      body = (
+        <>
+          <path d="M52 78 A28 28 0 0 0 43 58" fill="none" stroke={dark} strokeWidth="3.5" />
+          <line x1="24" y1="78" x2="90" y2="78" {...lineStroke} />
+          <line x1="24" y1="78" x2="70" y2="28" {...lineStroke} />
+          <circle cx="24" cy="78" r="5" fill={fill} />
+        </>
+      );
+      break;
+    case "obtuse-angle":
+      body = (
+        <>
+          <path d="M58 72 A24 24 0 0 0 19 54" fill="none" stroke={dark} strokeWidth="3.5" />
+          <line x1="34" y1="72" x2="94" y2="72" {...lineStroke} />
+          <line x1="34" y1="72" x2="6" y2="36" {...lineStroke} />
+          <circle cx="34" cy="72" r="5" fill={fill} />
+        </>
+      );
+      break;
+    case "straight-angle":
+      body = (
+        <>
+          <path d="M74 60 A24 24 0 0 0 26 60" fill="none" stroke={dark} strokeWidth="3.5" />
+          <line x1="8" y1="60" x2="92" y2="60" {...lineStroke} />
+          <circle cx="50" cy="60" r="6" fill={fill} />
+        </>
+      );
+      break;
+    case "reflex-angle":
+      body = (
+        <>
+          <path d="M72 56 A22 22 0 1 1 36 38" fill="none" stroke={dark} strokeWidth="3.5" />
+          <line x1="50" y1="56" x2="92" y2="56" {...lineStroke} />
+          <line x1="50" y1="56" x2="24" y2="22" {...lineStroke} />
+          <circle cx="50" cy="56" r="5" fill={fill} />
+        </>
+      );
+      break;
+    case "full-angle":
+      body = (
+        <>
+          <circle cx="50" cy="50" r="30" fill="none" {...lineStroke} />
+          <circle cx="50" cy="50" r="6" fill={fill} />
         </>
       );
       break;
