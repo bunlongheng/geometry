@@ -59,7 +59,7 @@ function ShapeDetail({
       aria-label={shape.name}
     >
       <div
-        className="sticker animate-pop-in relative flex max-h-[92dvh] w-full max-w-md flex-col gap-4 overflow-y-auto p-6 text-center"
+        className="sticker animate-pop-in detail-card relative flex max-h-[94dvh] w-full max-w-md flex-col gap-4 overflow-y-auto p-4 text-center sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -70,7 +70,7 @@ function ShapeDetail({
         >
           x
         </button>
-        <div className="mx-auto mt-2 h-40 w-40">
+        <div className="detail-shape mx-auto mt-2 h-36 w-36 sm:h-40 sm:w-40">
           <ShapeSvg
             key={paint}
             shapeId={shape.id}
@@ -90,27 +90,27 @@ function ShapeDetail({
           </p>
         </div>
         {shape.dimension === "2d" && shape.sides !== undefined ? (
-          <div className="flex justify-center gap-3">
+          <div className="detail-mid flex justify-center gap-3">
             <StatChip label="sides" value={shape.sides} />
             <StatChip label="corners" value={shape.corners ?? 0} />
           </div>
         ) : null}
         {shape.dimension === "3d" && shape.faces !== undefined ? (
-          <div className="flex justify-center gap-3">
+          <div className="detail-mid flex justify-center gap-3">
             <StatChip label="faces" value={shape.faces} />
             <StatChip label="edges" value={shape.edges ?? 0} />
             <StatChip label="corners" value={shape.vertices ?? 0} />
           </div>
         ) : null}
-        <p className="text-balance font-semibold">{shape.fact}</p>
-        <p className="font-semibold text-ink-soft">
+        <p className="detail-mid text-balance font-semibold">{shape.fact}</p>
+        <p className="detail-mid font-semibold text-ink-soft">
           You can spot one in real life: <span className="text-ink">{shape.example}</span>.
         </p>
         <div className="flex flex-col gap-2">
           <span className="text-xs font-bold uppercase tracking-wide text-ink-soft">
             Paint it!
           </span>
-          <div className="flex flex-wrap justify-center gap-2">
+          <div className="flex flex-nowrap justify-center gap-1.5 sm:gap-2">
             {COLORS.map((c) => (
               <button
                 key={c.id}
@@ -123,7 +123,7 @@ function ShapeDetail({
                 }}
                 aria-label={`Paint it ${c.name.toLowerCase()}`}
                 aria-pressed={paint === c.id}
-                className="h-9 w-9 rounded-full border-2 transition-transform active:scale-90"
+                className="h-7 w-7 shrink-0 rounded-full border-2 transition-transform active:scale-90 sm:h-9 sm:w-9"
                 style={{
                   backgroundColor: c.hex,
                   borderColor: paint === c.id ? "var(--ink)" : "transparent",
