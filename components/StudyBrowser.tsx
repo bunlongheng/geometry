@@ -52,14 +52,14 @@ function ShapeDetail({ shape, onClose }: { shape: Shape; onClose: () => void }) 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4 pb-[16vh] backdrop-blur-sm sm:pb-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-label={shape.name}
     >
       <div
-        className="sticker animate-pop-in detail-card relative flex max-h-[94dvh] w-full max-w-md flex-col gap-4 overflow-y-auto p-4 text-center sm:p-6"
+        className="sticker animate-pop-in detail-card relative flex max-h-[94dvh] w-full max-w-md flex-col gap-4 overflow-y-auto px-12 py-4 text-center sm:py-6"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -70,34 +70,32 @@ function ShapeDetail({ shape, onClose }: { shape: Shape; onClose: () => void }) 
         >
           x
         </button>
-        <div className="mx-auto flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => rotateColor(-1)}
-            aria-label="Previous color"
-            className="sticker sticker-press flex h-11 w-11 shrink-0 items-center justify-center"
-            style={{ borderRadius: "9999px" }}
-          >
-            <ChevronLeftIcon className="h-6 w-6" />
-          </button>
-          <div className="detail-shape mt-2 h-36 w-36 sm:h-40 sm:w-40">
-            <ShapeSvg
-              key={paint}
-              shapeId={shape.id}
-              colorId={paint}
-              title={`${color.name} ${shape.name}`}
-              className="animate-pop-in h-full w-full"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => rotateColor(1)}
-            aria-label="Next color"
-            className="sticker sticker-press flex h-11 w-11 shrink-0 items-center justify-center"
-            style={{ borderRadius: "9999px" }}
-          >
-            <ChevronRightIcon className="h-6 w-6" />
-          </button>
+        <button
+          type="button"
+          onClick={() => rotateColor(-1)}
+          aria-label="Previous color"
+          className="sticker sticker-press absolute left-1.5 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center"
+          style={{ borderRadius: "9999px" }}
+        >
+          <ChevronLeftIcon className="h-6 w-6" />
+        </button>
+        <button
+          type="button"
+          onClick={() => rotateColor(1)}
+          aria-label="Next color"
+          className="sticker sticker-press absolute right-1.5 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center"
+          style={{ borderRadius: "9999px" }}
+        >
+          <ChevronRightIcon className="h-6 w-6" />
+        </button>
+        <div className="detail-shape mx-auto mt-2 h-36 w-36 sm:h-40 sm:w-40">
+          <ShapeSvg
+            key={paint}
+            shapeId={shape.id}
+            colorId={paint}
+            title={`${color.name} ${shape.name}`}
+            className="animate-pop-in h-full w-full"
+          />
         </div>
         <div>
           <h2 className="font-display text-4xl font-bold">{shape.name}</h2>
@@ -130,7 +128,7 @@ function ShapeDetail({ shape, onClose }: { shape: Shape; onClose: () => void }) 
           <span className="text-xs font-bold uppercase tracking-wide text-ink-soft">
             Paint it!
           </span>
-          <div className="flex flex-nowrap justify-center gap-1.5 sm:gap-2">
+          <div className="-mx-8 flex flex-nowrap justify-center gap-1.5 sm:mx-0 sm:gap-2">
             {COLORS.map((c) => (
               <button
                 key={c.id}
