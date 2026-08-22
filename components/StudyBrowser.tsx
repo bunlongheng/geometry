@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ShapeSvg from "@/components/ShapeSvg";
+import { ChevronLeftIcon, ChevronRightIcon } from "@/components/Icons";
 import { speak } from "@/components/speak";
 import { COLORS, getColor, type ColorId } from "@/lib/colors";
 import {
@@ -36,19 +37,18 @@ function StatChip({ label, value }: { label: string; value: number }) {
   );
 }
 
-function ShapeDetail({
-  shape,
-  onClose,
-  onPrev,
-  onNext,
-}: {
-  shape: Shape;
-  onClose: () => void;
-  onPrev: () => void;
-  onNext: () => void;
-}) {
+function ShapeDetail({ shape, onClose }: { shape: Shape; onClose: () => void }) {
   const [paint, setPaint] = useState<ColorId>(shape.color);
   const color = getColor(paint);
+
+  // Left/right chevrons rotate through the colors - the shape itself never
+  // changes inside this card (owner rule: pick a new shape from the grid).
+  const rotateColor = (dir: 1 | -1) => {
+    const i = COLORS.findIndex((c) => c.id === paint);
+    const next = COLORS[(i + dir + COLORS.length) % COLORS.length];
+    setPaint(next.id);
+    speakIfOn(`${next.name.toLowerCase()} ${shape.name.toLowerCase()}`);
+  };
 
   return (
     <div
@@ -70,14 +70,34 @@ function ShapeDetail({
         >
           x
         </button>
-        <div className="detail-shape mx-auto mt-2 h-36 w-36 sm:h-40 sm:w-40">
-          <ShapeSvg
-            key={paint}
-            shapeId={shape.id}
-            colorId={paint}
-            title={`${color.name} ${shape.name}`}
-            className="animate-pop-in h-full w-full"
-          />
+        <div className="mx-auto flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => rotateColor(-1)}
+            aria-label="Previous color"
+            className="sticker sticker-press flex h-11 w-11 shrink-0 items-center justify-center"
+            style={{ borderRadius: "9999px" }}
+          >
+            <ChevronLeftIcon className="h-6 w-6" />
+          </button>
+          <div className="detail-shape mt-2 h-36 w-36 sm:h-40 sm:w-40">
+            <ShapeSvg
+              key={paint}
+              shapeId={shape.id}
+              colorId={paint}
+              title={`${color.name} ${shape.name}`}
+              className="animate-pop-in h-full w-full"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => rotateColor(1)}
+            aria-label="Next color"
+            className="sticker sticker-press flex h-11 w-11 shrink-0 items-center justify-center"
+            style={{ borderRadius: "9999px" }}
+          >
+            <ChevronRightIcon className="h-6 w-6" />
+          </button>
         </div>
         <div>
           <h2 className="font-display text-4xl font-bold">{shape.name}</h2>
@@ -132,22 +152,6 @@ function ShapeDetail({
               />
             ))}
           </div>
-        </div>
-        <div className="mt-1 flex justify-between gap-3">
-          <button
-            type="button"
-            onClick={onPrev}
-            className="sticker sticker-press flex-1 px-4 py-2 font-display text-lg font-bold"
-          >
-            Back
-          </button>
-          <button
-            type="button"
-            onClick={onNext}
-            className="sticker sticker-press flex-1 px-4 py-2 font-display text-lg font-bold"
-          >
-            Next
-          </button>
         </div>
       </div>
     </div>
@@ -216,20 +220,7 @@ export default function StudyBrowser() {
       </div>
 
       {openIndex !== null ? (
-        <ShapeDetail
-          shape={shapes[openIndex]}
-          onClose={() => setOpenIndex(null)}
-          onPrev={() => {
-            const i = (openIndex - 1 + shapes.length) % shapes.length;
-            setOpenIndex(i);
-            speakIfOn(`${getColor(shapes[i].color).name} ${shapes[i].name}`.toLowerCase());
-          }}
-          onNext={() => {
-            const i = (openIndex + 1) % shapes.length;
-            setOpenIndex(i);
-            speakIfOn(`${getColor(shapes[i].color).name} ${shapes[i].name}`.toLowerCase());
-          }}
-        />
+        <ShapeDetail shape={shapes[openIndex]} onClose={() => setOpenIndex(null)} />
       ) : null}
     </div>
   );

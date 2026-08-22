@@ -73,3 +73,19 @@ export function RetryIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
+export function ChevronLeftIcon({ className }: { className?: string }) {
+  return (
+    <svg {...base({ className })}>
+      <path d="m15 5-7 7 7 7" />
+    </svg>
+  );
+}
+
+export function ChevronRightIcon({ className }: { className?: string }) {
+  return (
+    <svg {...base({ className })}>
+      <path d="m9 5 7 7-7 7" />
+    </svg>
+  );
+}

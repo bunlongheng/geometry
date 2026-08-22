@@ -453,23 +453,20 @@ export default function QuizGame() {
           ))}
         </div>
 
-        <div className="min-h-14 text-center" aria-live="polite">
+        <div className="min-h-10 text-center" aria-live="polite">
           {picked !== null ? (
-            <p className="animate-pop-in font-semibold">
-              <span
-                className={`font-display text-xl font-bold ${
-                  picked !== "timeout" && picked === question.answerIndex
-                    ? "text-good"
-                    : "text-bad"
-                }`}
-              >
-                {picked === "timeout"
-                  ? "Time's up! "
-                  : picked === question.answerIndex
-                    ? "Yes! "
-                    : "Almost! "}
-              </span>
-              {question.explain}
+            <p
+              className={`animate-pop-in font-display text-2xl font-bold ${
+                picked !== "timeout" && picked === question.answerIndex
+                  ? "text-good"
+                  : "text-bad"
+              }`}
+            >
+              {picked === "timeout"
+                ? "Time's up!"
+                : picked === question.answerIndex
+                  ? "Yes!"
+                  : "Almost!"}
             </p>
           ) : null}
         </div>

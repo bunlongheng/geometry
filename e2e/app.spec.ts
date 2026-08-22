@@ -15,10 +15,13 @@ test("study mode browses 2D and 3D and opens a detail card", async ({ page }) =>
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("heading", { name: "Circle" })).toBeVisible();
-  // Paint it a different color and step to the next shape
+  // Paint it a different color, then the right chevron rotates to the NEXT
+  // color while the shape stays the same
   await dialog.getByRole("button", { name: "Paint it blue" }).click();
-  await dialog.getByRole("button", { name: "Next" }).click();
-  await expect(dialog.getByRole("heading", { name: "Square" })).toBeVisible();
+  await expect(dialog.getByText("blue", { exact: true })).toBeVisible();
+  await dialog.getByRole("button", { name: "Next color" }).click();
+  await expect(dialog.getByText("purple", { exact: true })).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: "Circle" })).toBeVisible();
   await dialog.getByRole("button", { name: "Close" }).click();
   // Switch to 3D
   await page.getByRole("button", { name: "3D", exact: true }).click();
