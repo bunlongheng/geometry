@@ -7,27 +7,19 @@ test("home links to both modes", async ({ page }) => {
   await expect(page.getByRole("link", { name: /Quiz/ }).first()).toBeVisible();
 });
 
-test("study mode browses 2D and 3D and opens a detail card", async ({ page }) => {
+test("study mode browses all 4 categories", async ({ page }) => {
   await page.goto("/study");
-  // 15 2D shape cards by default
   await expect(page.getByRole("button", { name: "Circle Circle", exact: true })).toBeVisible();
+  // Tapping a card never opens a modal - it just speaks the name
   await page.getByRole("button", { name: "Circle Circle", exact: true }).click();
-  const dialog = page.getByRole("dialog");
-  await expect(dialog).toBeVisible();
-  await expect(dialog.getByRole("heading", { name: "Circle" })).toBeVisible();
-  // Paint it a different color, then the right chevron rotates to the NEXT
-  // color while the shape stays the same
-  await dialog.getByRole("button", { name: "Paint it blue" }).click();
-  await expect(dialog.getByText("blue", { exact: true })).toBeVisible();
-  await dialog.getByRole("button", { name: "Next color" }).click();
-  await expect(dialog.getByText("purple", { exact: true })).toBeVisible();
-  await expect(dialog.getByRole("heading", { name: "Circle" })).toBeVisible();
-  await dialog.getByRole("button", { name: "Close" }).click();
-  // Switch to 3D
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: "3D", exact: true }).click();
   await expect(page.getByRole("button", { name: "Sphere Sphere", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Cube/ }).first()).toBeVisible();
-});
+  await page.getByRole("button", { name: "Lines" }).click();
+  await expect(page.getByRole("button", { name: /Zigzag/ })).toBeVisible();
+  await page.getByRole("button", { name: "Angles" }).click();
+  await expect(page.getByRole("button", { name: /Right Angle/ })).toBeVisible();
+})
 
 test("a full 10-question easy quiz reaches the score screen", async ({ page }) => {
   await page.goto("/quiz");

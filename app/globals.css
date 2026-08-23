@@ -101,23 +101,6 @@ a {
   }
 }
 
-/* Landscape phones (short viewports): compact the shape detail card so the
-   shape, its name, and the paint colors share 1 screen - the middle text
-   hides rather than pushing the colors off-screen. */
-@media (max-height: 540px) {
-  .detail-card {
-    gap: 0.5rem;
-  }
-  .detail-shape {
-    height: 5.5rem;
-    width: 5.5rem;
-    margin-top: 0;
-  }
-  .detail-mid {
-    display: none;
-  }
-}
-
 /* Sticker card: chunky border + hard offset shadow, like a die-cut sticker.
    Lives in the components layer so utility classes (bg-accent etc) can override. */
 @layer components {
