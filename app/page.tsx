@@ -1,6 +1,5 @@
 import Link from "next/link";
 import ShapeSvg from "@/components/ShapeSvg";
-import { SHAPES_2D, SHAPES_3D } from "@/lib/shapes";
 
 // Decorative floating shapes behind the hero - purely visual, hidden from AT.
 const FLOATERS = [
@@ -30,13 +29,6 @@ export default function HomePage() {
         <h1 className="animate-rise-in font-display text-5xl font-bold leading-tight sm:text-6xl">
           Shapes are <span className="text-accent">everywhere!</span>
         </h1>
-        <p
-          className="animate-rise-in mx-auto mt-4 max-w-md text-lg font-semibold text-ink-soft"
-          style={{ animationDelay: "0.1s" }}
-        >
-          Meet {SHAPES_2D.length} flat shapes, {SHAPES_3D.length} solid shapes, plus lines
-          and angles - learn their colors, then beat the 10-question quiz!
-        </p>
       </section>
 
       <section className="grid gap-6 sm:grid-cols-2">
