@@ -44,7 +44,7 @@ export default function HomePage() {
           </div>
           <span className="font-display text-3xl font-bold">Study</span>
           <span className="font-semibold text-ink-soft">
-            Browse every 2D and 3D shape - names, colors, and fun facts.
+            Tap any shape to hear its name - 2D, 3D, lines, and angles.
           </span>
         </Link>
         <Link
@@ -58,7 +58,7 @@ export default function HomePage() {
           </div>
           <span className="font-display text-3xl font-bold">Quiz</span>
           <span className="font-semibold text-ink-soft">
-            3 levels, pick 2D or 3D, and win up to 3 stars!
+            3 levels, beat the timer, score up to 100!
           </span>
         </Link>
       </section>
