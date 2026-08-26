@@ -5,6 +5,7 @@ import Link from "next/link";
 import NavLinks from "@/components/NavLinks";
 import SettingsMenu from "@/components/SettingsMenu";
 import FloatingShapes from "@/components/FloatingShapes";
+import SwRegister from "./sw-register";
 import "./globals.css";
 
 const baloo = Baloo_2({ subsets: ["latin"], variable: "--font-baloo" });
@@ -15,6 +16,7 @@ export const metadata: Metadata = {
   title: "Geometry - learn shapes, play quizzes",
   description:
     "A friendly geometry playground for kids: study every 2D and 3D shape, learn its color, then beat the quiz at 3 levels.",
+  manifest: "/manifest.webmanifest",
 };
 
 export const viewport: Viewport = {
@@ -63,6 +65,7 @@ export default async function RootLayout({
         <main className="mx-auto w-full max-w-5xl px-4 pb-[calc(2.5rem+env(safe-area-inset-bottom))] pt-6">
           {children}
         </main>
+        <SwRegister />
       </body>
     </html>
   );
