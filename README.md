@@ -1,3 +1,13 @@
+<div align="center">
+  <img src="docs/icon.png" alt="Geometry" width="96" height="96" />
+  <h1>Geometry</h1>
+  <p><em>Talking geometry playground for kids - tap shapes to hear them, then beat a timed 10-question quiz</em></p>
+  <p><a href="https://geometry-bheng.vercel.app">Live</a> &middot; <a href="https://github.com/bunlongheng/geometry">Repo</a> &middot; <a href="https://bunlongheng.com/projects?name=geometry">Portfolio</a></p>
+  <img src="docs/social-preview.png" alt="Geometry - preview" width="820" />
+</div>
+
+---
+
 # Geometry
 
 A friendly geometry playground for kids: study every 2D and 3D shape, learn its color, then beat the quiz at 3 levels.
